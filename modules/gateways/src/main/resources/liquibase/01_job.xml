@@ -1,0 +1,109 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
+
+    <changeSet id="01_job" author="rodrigo">
+        <createTable tableName="slice_job">
+            <column name="job_id" type="uuid">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="input_file_uri" type="text">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="slice_interval_seconds" type="int">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="progress_current" type="int">
+            </column>
+            <column name="progress_total" type="int">
+            </column>
+
+            <column name="output_file_uri" type="text">
+            </column>
+            <column name="error_message" type="text">
+            </column>
+
+            <column name="start_time" type="timestamp">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_time" type="timestamp">
+            </column>
+
+            <column name="user_email" type="text">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <insert tableName="slice_job">
+            <column name="job_id" value="123e4567-e89b-12d3-a456-426614174000"/>
+
+            <column name="input_file_uri" value="/input/123e4567-e89b-12d3-a456-426614174000.mp4"/>
+            <column name="slice_interval_seconds" value="3"/>
+
+            <column name="status" value="CREATED"/>
+
+            <column name="start_time" value="2024-01-09T15:30:12"/>
+
+            <column name="user_email" value="user1@fiap.example.com"/>
+        </insert>
+
+        <insert tableName="slice_job">
+            <column name="job_id" value="223e4567-e89b-42d3-a456-426614174001"/>
+
+            <column name="input_file_uri" value="/input/223e4567-e89b-42d3-a456-426614174001.mp4"/>
+            <column name="slice_interval_seconds" value="4"/>
+
+            <column name="status" value="PROCESSING"/>
+            <column name="progress_current" value="4"/>
+            <column name="progress_total" value="50"/>
+
+            <column name="start_time" value="2024-01-09T15:20:52"/>
+
+            <column name="user_email" value="user2@fiap.example.com"/>
+        </insert>
+
+        <insert tableName="slice_job">
+            <column name="job_id" value="6c9dcf45-15e5-4ab9-babe-7fe089194beb"/>
+
+            <column name="input_file_uri" value="/input/6c9dcf45-15e5-4ab9-babe-7fe089194beb.mp4"/>
+            <column name="slice_interval_seconds" value="5"/>
+
+            <column name="status" value="FINISHED"/>
+            <column name="progress_current" value="45"/>
+            <column name="progress_total" value="45"/>
+
+            <column name="output_file_uri" value="/output/6c9dcf45-15e5-4ab9-babe-7fe089194beb.zip"/>
+
+            <column name="start_time" value="2024-01-08T20:00:00"/>
+            <column name="end_time" value="2024-01-08T22:45:46"/>
+
+            <column name="user_email" value="user1@fiap.example.com"/>
+        </insert>
+
+        <insert tableName="slice_job">
+            <column name="job_id" value="a31f6b5e-0d4e-4070-9fc9-f9cc5e5c61b1"/>
+
+            <column name="input_file_uri" value="/input/a31f6b5e-0d4e-4070-9fc9-f9cc5e5c61b1.mp4"/>
+            <column name="slice_interval_seconds" value="6"/>
+
+            <column name="status" value="FAILED"/>
+
+            <column name="start_time" value="2024-01-08T10:00:00"/>
+            <column name="end_time" value="2024-01-08T10:00:01"/>
+
+            <column name="error_message" value="The video file is invalid" />
+            <column name="user_email" value="user2@fiap.example.com"/>
+        </insert>
+
+    </changeSet>
+
+</databaseChangeLog>
