@@ -1,0 +1,21 @@
+GET {{url}}/jobs
+IdentityToken: User1
+
+###
+POST {{url}}/jobs
+Content-Type: multipart/form-data; boundary=boundary
+IdentityToken: User1
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="sample-video.mp4"
+Content-Type: video/mp4
+
+< ./sample-video.mp4
+
+--boundary
+Content-Disposition: form-data; name="sliceIntervalSeconds"
+
+2
+
+--boundary--
+

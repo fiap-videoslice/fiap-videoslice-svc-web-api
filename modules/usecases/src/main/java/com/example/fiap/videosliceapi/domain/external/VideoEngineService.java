@@ -1,7 +1,9 @@
 package com.example.fiap.videosliceapi.domain.external;
 
-import com.example.fiap.videosliceapi.domain.entities.SliceJob;
+import com.example.fiap.videosliceapi.domain.entities.Job;
+
+import java.io.IOException;
 
 public interface VideoEngineService {
-    void startProcess(SliceJob sliceJob);
+    void startProcess(Job job) throws IOException;
 }

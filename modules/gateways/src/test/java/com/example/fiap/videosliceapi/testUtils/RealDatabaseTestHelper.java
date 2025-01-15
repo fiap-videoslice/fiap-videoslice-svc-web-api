@@ -1,7 +1,7 @@
-package com.example.fiap.archburgers.testUtils;
+package com.example.fiap.videosliceapi.testUtils;
 
-import com.example.fiap.archburgers.adapters.datasource.DatabaseConnection;
-import com.example.fiap.archburgers.tools.migration.DatabaseMigration;
+import com.example.fiap.videosliceapi.adapters.datasource.DatabaseConnection;
+import com.example.fiap.videosliceapi.tools.migration.DatabaseMigration;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.testcontainers.containers.PostgreSQLContainer;
 

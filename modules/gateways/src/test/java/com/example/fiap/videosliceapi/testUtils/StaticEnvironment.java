@@ -1,4 +1,4 @@
-package com.example.fiap.archburgers.testUtils;
+package com.example.fiap.videosliceapi.testUtils;
 
 import org.springframework.core.env.AbstractEnvironment;
 

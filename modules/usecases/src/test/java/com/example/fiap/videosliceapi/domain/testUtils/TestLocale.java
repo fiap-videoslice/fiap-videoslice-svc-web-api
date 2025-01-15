@@ -1,4 +1,4 @@
-package com.example.fiap.archburgers.domain.testUtils;
+package com.example.fiap.videosliceapi.domain.testUtils;
 
 import java.util.Locale;
 import java.util.TimeZone;

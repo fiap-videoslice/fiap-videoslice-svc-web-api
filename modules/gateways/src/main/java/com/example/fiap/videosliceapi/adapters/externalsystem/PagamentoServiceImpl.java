@@ -20,7 +20,7 @@ public class PagamentoServiceImpl  {
     private static final Logger LOGGER = LoggerFactory.getLogger(PagamentoServiceImpl.class);
 
 //    private final PagamentoServiceWebApi webApi;
-//    private final PagamentoServiceQueueApi queueApi;
+//    private final VideoEngineServiceQueueApi queueApi;
 //
 //    private volatile List<IdFormaPagamento> formasPagamentoCache;
 //    private volatile Instant formasPagamentoCacheTimestamp;
@@ -30,14 +30,14 @@ public class PagamentoServiceImpl  {
 //    private final DateTimeFormatter requestTimeFormatter = DateTimeFormatter.ISO_INSTANT;
 //
 //    @Autowired
-//    public PagamentoServiceImpl(PagamentoServiceWebApi webApi, PagamentoServiceQueueApi queueApi) {
+//    public PagamentoServiceImpl(PagamentoServiceWebApi webApi, VideoEngineServiceQueueApi queueApi) {
 //        this.webApi = webApi;
 //        this.queueApi = queueApi;
 //        this.webCacheMillis = (5 * 60 * 1000);
 //    }
 //
 //    @VisibleForTesting
-//    PagamentoServiceImpl(PagamentoServiceWebApi webApi, PagamentoServiceQueueApi queueApi, long webCacheMillis) {
+//    PagamentoServiceImpl(PagamentoServiceWebApi webApi, VideoEngineServiceQueueApi queueApi, long webCacheMillis) {
 //        this.webApi = webApi;
 //        this.queueApi = queueApi;
 //        this.webCacheMillis = webCacheMillis;
@@ -88,7 +88,7 @@ public class PagamentoServiceImpl  {
 //
 //    @Override
 //    public void receberConfirmacoes(Consumer<Pagamento> callback) {
-//        List<PagamentoServiceQueueApi.MessageSummary> messages = queueApi.receiveMessagesQueueConfirmacao();
+//        List<VideoEngineServiceQueueApi.MessageSummary> messages = queueApi.receiveMessagesQueueConfirmacao();
 //
 //        messages.forEach(message -> {
 //            try {

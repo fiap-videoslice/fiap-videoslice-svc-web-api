@@ -29,18 +29,18 @@ public class DatabaseConnection implements TransactionManager, AutoCloseable {
 
     @Autowired
     public DatabaseConnection(Environment environment) throws Exception {
-        String dbUrlEnv = environment.getProperty("videoslice.datasource.dbUrl");
-        String dbUserEnv = environment.getProperty("videoslice.datasource.dbUser");
-        String dbPassEnv = environment.getProperty("videoslice.datasource.dbPass");
+        String dbUrlEnv = environment.getProperty("videosliceapi.datasource.dbUrl");
+        String dbUserEnv = environment.getProperty("videosliceapi.datasource.dbUser");
+        String dbPassEnv = environment.getProperty("videosliceapi.datasource.dbPass");
 
         if (dbUrlEnv == null) {
-            throw new IllegalStateException("videoslice.datasource.dbUrl env is missing");
+            throw new IllegalStateException("videosliceapi.datasource.dbUrl env is missing");
         }
         if (dbUserEnv == null) {
-            throw new IllegalStateException("videoslice.datasource.dbUser env is missing");
+            throw new IllegalStateException("videosliceapi.datasource.dbUser env is missing");
         }
         if (dbPassEnv == null) {
-            throw new IllegalStateException("videoslice.datasource.dbPass env is missing");
+            throw new IllegalStateException("videosliceapi.datasource.dbPass env is missing");
         }
 
         cpds = buildDataSource(dbUrlEnv, dbUserEnv, dbPassEnv);

@@ -121,19 +121,24 @@
                     <jvmArguments>-agentlib:jdwp=transport=dt_socket,server=y,address=8009,suspend=n</jvmArguments>
 
                     <environmentVariables>
-                        <videoslice.datasource.dbUrl>jdbc:postgresql://localhost/fiap_videoslice?autoReconnect=true</videoslice.datasource.dbUrl>
-                        <videoslice.datasource.dbUser>videoslice_user</videoslice.datasource.dbUser>
-                        <videoslice.datasource.dbPass>Slice!</videoslice.datasource.dbPass>
+                        <videosliceapi.auth.development-dummy-tokens.enabled>true</videosliceapi.auth.development-dummy-tokens.enabled>
 
-                        <videoslice.integration.aws.region>us-east-1</videoslice.integration.aws.region>
-                        <videoslice.integration.cognito.userPoolId>us-east-1_222222222</videoslice.integration.cognito.userPoolId>
-                        <videoslice.integration.cognito.clientId>9999999999</videoslice.integration.cognito.clientId>
-                        <videoslice.integration.cognito.clientSecret>9999999999999999999999999999999999</videoslice.integration.cognito.clientSecret>
+                        <videosliceapi.datasource.dbUrl>jdbc:postgresql://localhost/fiap_videoslice?autoReconnect=true</videosliceapi.datasource.dbUrl>
+                        <videosliceapi.datasource.dbUser>videoslice_user</videosliceapi.datasource.dbUser>
+                        <videosliceapi.datasource.dbPass>Slice!</videosliceapi.datasource.dbPass>
 
-                        <videoslice.integration.sqs.sqsEndpoint>http://localhost:4566</videoslice.integration.sqs.sqsEndpoint>
-                        <videoslice.integration.sqs.pagamentosEmAbertoQueueName>pedidos</videoslice.integration.sqs.pagamentosEmAbertoQueueName>
-                        <videoslice.integration.sqs.pagamentosConcluidosQueueName>pagamentos_concluidos</videoslice.integration.sqs.pagamentosConcluidosQueueName>
+                        <videosliceapi.integration.aws.region>us-east-1</videosliceapi.integration.aws.region>
+                        <videosliceapi.integration.cognito.userPoolId>us-east-1_222222222</videosliceapi.integration.cognito.userPoolId>
+                        <videosliceapi.integration.cognito.clientId>9999999999</videosliceapi.integration.cognito.clientId>
+                        <videosliceapi.integration.cognito.clientSecret>9999999999999999999999999999999999</videosliceapi.integration.cognito.clientSecret>
 
+                        <videosliceapi.integration.aws.overrideAwsEndpoint>http://localhost:4566</videosliceapi.integration.aws.overrideAwsEndpoint>
+
+                        <videosliceapi.integration.sqs.videoProcessRequestQueueName>videoslice_job_requests</videosliceapi.integration.sqs.videoProcessRequestQueueName>
+                        <videosliceapi.integration.sqs.videoProcessResponseQueueName>videoslice_job_status</videosliceapi.integration.sqs.videoProcessResponseQueueName>
+
+                        <videosliceapi.integration.s3.videoProcessRequestBucketName>videoslice-job-requests</videosliceapi.integration.s3.videoProcessRequestBucketName>
+                        <videosliceapi.integration.s3.videoProcessResultBucketName>videoslice-job-results</videosliceapi.integration.s3.videoProcessResultBucketName>
                     </environmentVariables>
                 </configuration>
             </plugin>

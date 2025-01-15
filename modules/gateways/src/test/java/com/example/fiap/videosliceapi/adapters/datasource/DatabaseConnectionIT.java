@@ -1,7 +1,7 @@
-package com.example.fiap.archburgers.adapters.datasource;
+package com.example.fiap.videosliceapi.adapters.datasource;
 
-import com.example.fiap.archburgers.testUtils.RealDatabaseTestHelper;
-import com.example.fiap.archburgers.testUtils.StaticEnvironment;
+import com.example.fiap.videosliceapi.testUtils.StaticEnvironment;
+import com.example.fiap.videosliceapi.testUtils.RealDatabaseTestHelper;
 import org.junit.jupiter.api.*;
 import org.springframework.core.env.Environment;
 
@@ -10,6 +10,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -50,8 +51,8 @@ class DatabaseConnectionIT {
 
         DatabaseConnection.ConnectionInstance conn = databaseConnection.getConnection();
         try {
-            PreparedStatement stmt = conn.prepareStatement("update cliente set nome = 'Novo Nome XYZ' where cliente_id = ?");
-            stmt.setInt(1, 2);
+            PreparedStatement stmt = conn.prepareStatement("update slice_job set output_file_uri = '/output/6c9dcf45-modified.zip' where job_id = ?");
+            stmt.setObject(1, UUID.fromString("6c9dcf45-15e5-4ab9-babe-7fe089194beb"));
             stmt.execute();
             stmt.close();
         } finally {
@@ -68,8 +69,8 @@ class DatabaseConnectionIT {
 
         try (Connection directConnection = DriverManager.getConnection(
                 realDatabase.getJdbcUrl(), realDatabase.getJdbcUsername(), realDatabase.getJdbcPassword())) {
-            PreparedStatement checkStmt = directConnection.prepareStatement("select nome from cliente where cliente_id = ?");
-            checkStmt.setInt(1, 2);
+            PreparedStatement checkStmt = directConnection.prepareStatement("select output_file_uri from slice_job where job_id = ?");
+            checkStmt.setObject(1, UUID.fromString("6c9dcf45-15e5-4ab9-babe-7fe089194beb"));
             var rs = checkStmt.executeQuery();
             assertThat(rs.next()).isTrue();
             newValue.set(rs.getString(1));
@@ -77,7 +78,7 @@ class DatabaseConnectionIT {
             checkStmt.close();
         }
 
-        assertThat(newValue.get()).isEqualTo("Novo Nome XYZ");
+        assertThat(newValue.get()).isEqualTo("/output/6c9dcf45-modified.zip");
     }
 
     @Test
@@ -107,8 +108,8 @@ class DatabaseConnectionIT {
             // 1. Obtém conexão e realiza uma mudança
             DatabaseConnection.ConnectionInstance conn = databaseConnection.getConnection();
             try {
-                PreparedStatement stmt = conn.prepareStatement("update cliente set nome = 'Novo Nome XYZ' where cliente_id = ?");
-                stmt.setInt(1, 2);
+                PreparedStatement stmt = conn.prepareStatement("update slice_job set output_file_uri = '/output/6c9dcf45-modified.zip' where job_id = ?");
+                stmt.setObject(1, UUID.fromString("6c9dcf45-15e5-4ab9-babe-7fe089194beb"));
                 stmt.execute();
                 stmt.close();
             } catch (SQLException e) {
@@ -124,8 +125,8 @@ class DatabaseConnectionIT {
             // 3. Em uma "nova" conexão, realiza uma segunda mudança
             conn = databaseConnection.getConnection();
             try {
-                PreparedStatement stmt2 = conn.prepareStatement("update carrinho set observacoes = 'Com ketchup' where carrinho_id = ?");
-                stmt2.setInt(1, 1);
+                PreparedStatement stmt2 = conn.prepareStatement("update slice_job set error_message = 'Video is invalid and the message is modified' where job_id = ?");
+                stmt2.setObject(1, UUID.fromString("a31f6b5e-0d4e-4070-9fc9-f9cc5e5c61b1"));
                 stmt2.execute();
                 stmt2.close();
 
@@ -163,8 +164,8 @@ class DatabaseConnectionIT {
         try (Connection directConnection = DriverManager.getConnection(
                 realDatabase.getJdbcUrl(), realDatabase.getJdbcUsername(), realDatabase.getJdbcPassword())) {
             {
-                PreparedStatement checkStmt = directConnection.prepareStatement("select nome from cliente where cliente_id = ?");
-                checkStmt.setInt(1, 2);
+                PreparedStatement checkStmt = directConnection.prepareStatement("select output_file_uri from slice_job where job_id = ?");
+                checkStmt.setObject(1, UUID.fromString("6c9dcf45-15e5-4ab9-babe-7fe089194beb"));
                 var rs = checkStmt.executeQuery();
                 assertThat(rs.next()).isTrue();
                 newValue1.set(rs.getString(1));
@@ -172,8 +173,8 @@ class DatabaseConnectionIT {
                 checkStmt.close();
             }
 
-            PreparedStatement checkStmt2 = directConnection.prepareStatement("select observacoes from carrinho where carrinho_id = ?");
-            checkStmt2.setInt(1, 1);
+            PreparedStatement checkStmt2 = directConnection.prepareStatement("select error_message from slice_job where job_id = ?");
+            checkStmt2.setObject(1, UUID.fromString("a31f6b5e-0d4e-4070-9fc9-f9cc5e5c61b1"));
             var rs2 = checkStmt2.executeQuery();
             assertThat(rs2.next()).isTrue();
             newValue2.set(rs2.getString(1));
@@ -181,8 +182,8 @@ class DatabaseConnectionIT {
             checkStmt2.close();
         }
 
-        assertThat(newValue1.get()).isEqualTo("Novo Nome XYZ");
-        assertThat(newValue2.get()).isEqualTo("Com ketchup");
+        assertThat(newValue1.get()).isEqualTo("/output/6c9dcf45-modified.zip");
+        assertThat(newValue2.get()).isEqualTo("Video is invalid and the message is modified");
     }
 
 
@@ -198,8 +199,8 @@ class DatabaseConnectionIT {
                 // 1. Realiza update dentro da transação
                 DatabaseConnection.ConnectionInstance conn = databaseConnection.getConnection();
                 try {
-                    PreparedStatement stmt = conn.prepareStatement("update cliente set nome = 'Novo Nome XYZ v2' where cliente_id = ?");
-                    stmt.setInt(1, 1);
+                    PreparedStatement stmt = conn.prepareStatement("update slice_job set output_file_uri = '/output/123e4567-modified_v2.zip' where job_id = ?");
+                    stmt.setObject(1, UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
                     stmt.execute();
                     stmt.close();
                 } catch (SQLException e) {
@@ -211,8 +212,8 @@ class DatabaseConnectionIT {
                 // 2. Ainda na mesma transação obtém o resultado do update
                 conn = databaseConnection.getConnection();
                 try {
-                    PreparedStatement checkStmt = conn.prepareStatement("select nome from cliente where cliente_id = ?");
-                    checkStmt.setInt(1, 1);
+                    PreparedStatement checkStmt = conn.prepareStatement("select output_file_uri from slice_job where job_id = ?");
+                    checkStmt.setObject(1, UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
                     var rs = checkStmt.executeQuery();
                     assertThat(rs.next()).isTrue();
                     valueInTransaction.set(rs.getString(1));
@@ -220,7 +221,7 @@ class DatabaseConnectionIT {
                     checkStmt.close();
 
                     // 3. Agora introduz um comando com Erro, que causará o rollback
-                    PreparedStatement returnStmt = conn.prepareStatement("select noNoNo from cliente");
+                    PreparedStatement returnStmt = conn.prepareStatement("select noNoNo from slice_job");
                     returnStmt.executeQuery();
 
                     return null;
@@ -234,7 +235,7 @@ class DatabaseConnectionIT {
             assertThat(e).hasMessageContaining("does not exist");
         }
 
-        assertThat(valueInTransaction.get()).isEqualTo("Novo Nome XYZ v2");
+        assertThat(valueInTransaction.get()).isEqualTo("/output/123e4567-modified_v2.zip");
 
         // 4. Verifica que a alteração feita no primeiro update sofreu rollback
         AtomicReference<String> newValue1 = new AtomicReference<>();
@@ -242,8 +243,8 @@ class DatabaseConnectionIT {
         try (Connection directConnection = DriverManager.getConnection(
                 realDatabase.getJdbcUrl(), realDatabase.getJdbcUsername(), realDatabase.getJdbcPassword())) {
             {
-                PreparedStatement checkStmt = directConnection.prepareStatement("select nome from cliente where cliente_id = ?");
-                checkStmt.setInt(1, 1);
+                PreparedStatement checkStmt = directConnection.prepareStatement("select output_file_uri from slice_job where job_id = ?");
+                checkStmt.setObject(1, UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
                 var rs = checkStmt.executeQuery();
                 assertThat(rs.next()).isTrue();
                 newValue1.set(rs.getString(1));
@@ -252,15 +253,15 @@ class DatabaseConnectionIT {
             }
         }
 
-        assertThat(newValue1.get()).isEqualTo("Roberto Carlos"); // Revertido para valor original da Migration
+        assertThat(newValue1.get()).isNull(); // Revertido para valor original da Migration
     }
 
     @Test
     public void getConnectionThrowsSQLException() throws Exception {
         Environment environment = new StaticEnvironment(Map.of(
-                "archburgers.datasource.dbUrl", "jdbc:postgresql://localhost:55543/mydb",
-                "archburgers.datasource.dbUser", "user",
-                "archburgers.datasource.dbPass", "password"
+                "videosliceapi.datasource.dbUrl", realDatabase.getJdbcUrl(),
+                "videosliceapi.datasource.dbUser", "this_user_does_not_exist",
+                "videosliceapi.datasource.dbPass", "password"
         ));
 
         try (DatabaseConnection databaseConnection = new DatabaseConnection(environment)) {

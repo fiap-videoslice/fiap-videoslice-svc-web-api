@@ -1,8 +1,7 @@
-package com.example.fiap.archburgers.adapters.testUtils;
+package com.example.fiap.videosliceapi.adapters.testUtils;
 
-import com.example.fiap.archburgers.adapters.datasource.TransactionManager;
 
-import java.util.function.Supplier;
+import com.example.fiap.videosliceapi.adapters.datasource.TransactionManager;
 
 public class DummyTransactionManager implements TransactionManager {
     @Override

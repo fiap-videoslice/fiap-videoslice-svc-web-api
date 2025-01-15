@@ -1,7 +1,6 @@
-package com.example.fiap.archburgers.adapters.auth;
+package com.example.fiap.videosliceapi.adapters.auth;
 
-import com.example.fiap.archburgers.adapters.externalsystem.AwsConfig;
-import com.example.fiap.archburgers.adapters.testUtils.StaticEnvironment;
+import com.example.fiap.videosliceapi.adapters.testUtils.StaticEnvironment;
 import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -51,12 +50,12 @@ public class CognitoJwksApiIT {
 
     private static @NotNull CognitoJwksApi getCognitoJwksApi(HttpUrl baseUrl) {
         Environment env = new StaticEnvironment(Map.of(
-                "archburgers.integration.aws.region", "us-east-1",
-                "archburgers.integration.cognito.userPoolId", "111111111",
-                "archburgers.integration.cognito.clientId", "1234567",
-                "archburgers.integration.cognito.clientSecret", "00secret99999",
+                "videosliceapi.integration.aws.region", "us-east-1",
+                "videosliceapi.integration.cognito.userPoolId", "111111111",
+                "videosliceapi.integration.cognito.clientId", "1234567",
+                "videosliceapi.integration.cognito.clientSecret", "00secret99999",
 
-                "archburgers.integration.cognito.overrideJwksUrl", baseUrl.toString()
+                "videosliceapi.integration.cognito.overrideJwksUrl", baseUrl.toString()
         ));
 
         return new CognitoJwksApi(env);

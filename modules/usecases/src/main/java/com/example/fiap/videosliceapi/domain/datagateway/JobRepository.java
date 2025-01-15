@@ -1,7 +1,11 @@
 package com.example.fiap.videosliceapi.domain.datagateway;
 
-import com.example.fiap.videosliceapi.domain.entities.SliceJob;
+import com.example.fiap.videosliceapi.domain.entities.Job;
+
+import java.util.List;
 
 public interface JobRepository {
-    SliceJob saveNewJob(SliceJob sliceJob);
+    void saveNewJob(Job job);
+
+    List<Job> findAllByUserEmail(String email);
 }

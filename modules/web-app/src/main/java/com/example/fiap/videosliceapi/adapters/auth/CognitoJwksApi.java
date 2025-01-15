@@ -35,7 +35,7 @@ public class CognitoJwksApi {
         String uriStr = String.format("https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json",
                 awsConfig.getAwsRegion(), awsConfig.getCognitoUserPoolId());
 
-        String overrideJwksUrl = environment.getProperty("archburgers.integration.cognito.overrideJwksUrl");
+        String overrideJwksUrl = environment.getProperty("videosliceapi.integration.cognito.overrideJwksUrl");
         if (overrideJwksUrl != null) {
             // Override is used mainly for automated tests
             uriStr = overrideJwksUrl;
