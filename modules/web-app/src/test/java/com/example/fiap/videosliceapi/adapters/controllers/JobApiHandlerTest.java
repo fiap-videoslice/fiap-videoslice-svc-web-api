@@ -82,7 +82,4 @@ class JobApiHandlerTest {
 
         return loggedUser;
     }
-
-
-    //andExpect(content().json(new ObjectMapper().writeValueAsString(CARRINHO_11_DTO)));
 }
