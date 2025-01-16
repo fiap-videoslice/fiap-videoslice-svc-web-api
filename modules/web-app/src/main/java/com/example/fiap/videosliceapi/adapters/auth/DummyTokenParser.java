@@ -1,7 +1,5 @@
 package com.example.fiap.videosliceapi.adapters.auth;
 
-import com.example.fiap.videosliceapi.domain.auth.LoggedUser;
-import com.example.fiap.videosliceapi.domain.auth.UserGroup;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 
@@ -29,23 +27,24 @@ public class DummyTokenParser implements LoggedUserTokenParser {
             identityToken = headers.getFirst(HEADER_NAME_LOWER);
 
         if (identityToken == null) {
-            return new DummyUser(false, null, null, null, null,
+            return new DummyUser(false, null, null, null, null, null,
                     "IdentityToken is missing. Check DummyTokenParser for valid values");
         }
 
         if (identityToken.equals("User1")) {
-            return new DummyUser(true, "Test User 1", "user1@fiap.example.com", UserGroup.User, identityToken, null);
+            return new DummyUser(true, "Test-User-1", "Test User 1", "user1@fiap.example.com", UserGroup.User, identityToken, null);
         } else if (identityToken.equals("User2")) {
-            return new DummyUser(true, "Test User 2", "user2@fiap.example.com", UserGroup.User, identityToken, null);
+            return new DummyUser(true, "Test-User-2", "Test User 2", "user2@fiap.example.com", UserGroup.User, identityToken, null);
         } else if (identityToken.equals("Admin")) {
-            return new DummyUser(true, "Test Admin", "admin@fiap.example.com", UserGroup.Admin, identityToken, null);
+            return new DummyUser(true, "Test-User-Admin-1", "Test Admin", "admin@fiap.example.com", UserGroup.Admin, identityToken, null);
         } else {
-            return new DummyUser(false, null, null, null, identityToken,
+            return new DummyUser(false, null, null, null, null, identityToken,
                     "Invalid IdentityToken: " + identityToken + ". Check DummyTokenParser for valid values");
         }
     }
 
     public record DummyUser(boolean authenticated,
+                            String userId,
                             String name,
                             String email,
                             UserGroup group,
@@ -56,6 +55,11 @@ public class DummyTokenParser implements LoggedUserTokenParser {
         @Override
         public String getEmail() {
             return email;
+        }
+
+        @Override
+        public String getUserId() {
+            return userId;
         }
 
         @Override

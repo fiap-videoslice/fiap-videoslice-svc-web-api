@@ -1,4 +1,4 @@
-package com.example.fiap.videosliceapi.domain.auth;
+package com.example.fiap.videosliceapi.adapters.auth;
 
 /**
  * Representação de um usuário autenticado no sistema.
@@ -10,6 +10,7 @@ public interface LoggedUser {
 
     String getName();
     String getEmail();
+    String getUserId();
 
     UserGroup getGroup();
 

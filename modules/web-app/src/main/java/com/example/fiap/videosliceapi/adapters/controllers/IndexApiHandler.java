@@ -3,7 +3,7 @@ package com.example.fiap.videosliceapi.adapters.controllers;
 import com.example.fiap.videosliceapi.adapters.auth.LoggedUserTokenParser;
 import com.example.fiap.videosliceapi.adapters.presenters.LoggedUserPresenter;
 import com.example.fiap.videosliceapi.apiutils.WebUtils;
-import com.example.fiap.videosliceapi.domain.auth.LoggedUser;
+import com.example.fiap.videosliceapi.adapters.auth.LoggedUser;
 import io.swagger.v3.oas.annotations.Operation;
 import org.intellij.lang.annotations.Language;
 import org.slf4j.Logger;

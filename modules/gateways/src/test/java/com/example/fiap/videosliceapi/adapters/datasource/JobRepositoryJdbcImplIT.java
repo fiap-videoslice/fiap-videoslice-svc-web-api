@@ -66,13 +66,13 @@ class JobRepositoryJdbcImplIT {
             assertThat(rs.getInt("slice_interval_seconds")).isEqualTo(5);
             assertThat(rs.getString("status")).isEqualTo("CREATED");
             assertThat(rs.getTimestamp("start_time").toInstant()).isEqualTo(INSTANT_1);
-            assertThat(rs.getString("user_email")).isEqualTo("user1@example");
+            assertThat(rs.getString("user_id")).isEqualTo("user1@example");
         }
     }
 
     @Test
-    void findAllByUserEmail_created_and_finished_examples() throws SQLException {
-        List<Job> jobs = repository.findAllByUserEmail("user1@fiap.example.com");
+    void findAllByUserId_created_and_finished_examples() throws SQLException {
+        List<Job> jobs = repository.findAllByUserId("user1@fiap.example.com");
 
         assertThat(jobs).hasSize(2);
 
@@ -86,7 +86,7 @@ class JobRepositoryJdbcImplIT {
         assertThat(job1.errorMessage()).isNull();
         assertThat(job1.startTime()).isEqualTo(Instant.parse("2024-01-09T15:30:12Z"));
         assertThat(job1.endTime()).isNull();
-        assertThat(job1.userEmail()).isEqualTo("user1@fiap.example.com");
+        assertThat(job1.userId()).isEqualTo("user1@fiap.example.com");
 
         Job job2 = jobs.get(1);
         assertThat(job2.id()).isEqualTo(UUID.fromString("6c9dcf45-15e5-4ab9-babe-7fe089194beb"));
@@ -98,12 +98,12 @@ class JobRepositoryJdbcImplIT {
         assertThat(job2.errorMessage()).isNull();
         assertThat(job2.startTime()).isEqualTo(Instant.parse("2024-01-08T20:00:00Z"));
         assertThat(job2.endTime()).isEqualTo(Instant.parse("2024-01-08T22:45:46Z"));
-        assertThat(job2.userEmail()).isEqualTo("user1@fiap.example.com");
+        assertThat(job2.userId()).isEqualTo("user1@fiap.example.com");
     }
 
     @Test
-    void findAllByUserEmail_processing_and_failed_examples() throws SQLException {
-        List<Job> jobs = repository.findAllByUserEmail("user2@fiap.example.com");
+    void findAllByUserId_processing_and_failed_examples() throws SQLException {
+        List<Job> jobs = repository.findAllByUserId("user2@fiap.example.com");
 
         assertThat(jobs).hasSize(2);
 
@@ -117,7 +117,7 @@ class JobRepositoryJdbcImplIT {
         assertThat(job1.errorMessage()).isNull();
         assertThat(job1.startTime()).isEqualTo(Instant.parse("2024-01-09T15:20:52Z"));
         assertThat(job1.endTime()).isNull();
-        assertThat(job1.userEmail()).isEqualTo("user2@fiap.example.com");
+        assertThat(job1.userId()).isEqualTo("user2@fiap.example.com");
 
         Job job2 = jobs.get(1);
         assertThat(job2.id()).isEqualTo(UUID.fromString("a31f6b5e-0d4e-4070-9fc9-f9cc5e5c61b1"));
@@ -129,6 +129,6 @@ class JobRepositoryJdbcImplIT {
         assertThat(job2.errorMessage()).isEqualTo("The video file is invalid");
         assertThat(job2.startTime()).isEqualTo(Instant.parse("2024-01-08T10:00:00Z"));
         assertThat(job2.endTime()).isEqualTo(Instant.parse("2024-01-08T10:00:01Z"));
-        assertThat(job2.userEmail()).isEqualTo("user2@fiap.example.com");
+        assertThat(job2.userId()).isEqualTo("user2@fiap.example.com");
     }
 }

@@ -1,7 +1,5 @@
 package com.example.fiap.videosliceapi.adapters.auth;//import static org.junit.jupiter.api.Assertions.*;
 
-import com.example.fiap.videosliceapi.domain.auth.LoggedUser;
-import com.example.fiap.videosliceapi.domain.auth.UserGroup;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;

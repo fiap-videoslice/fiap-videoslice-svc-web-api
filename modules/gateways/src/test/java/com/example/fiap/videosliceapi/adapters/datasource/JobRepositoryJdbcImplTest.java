@@ -1,5 +1,6 @@
 package com.example.fiap.videosliceapi.adapters.datasource;//import static org.junit.jupiter.api.Assertions.*;
 
+import com.example.fiap.videosliceapi.domain.entities.Job;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,8 +8,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.sql.SQLException;
+import java.time.Instant;
+import java.util.UUID;
 
-import static org.junit.Assert.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -34,13 +37,18 @@ class JobRepositoryJdbcImplTest {
     void saveNewJob_databaseError() throws SQLException {
         when(connectionInstance.prepareStatement(anyString())).thenThrow(new SQLException("Something went wrong"));
 
-        assertThrows(RuntimeException.class, () -> jobRepository.saveNewJob(mock()));
+        Job job = Job.createJob(UUID.randomUUID(),
+                "/inputs/file.mp4", 10, Instant.now(), "abc@example.com");
+
+        assertThatThrownBy(() -> jobRepository.saveNewJob(job))
+                .hasMessageContaining("Database error: Something went wrong");
     }
 
     @Test
-    void findAllByUserEmail_databaseError() throws SQLException {
+    void findAllByUserId_databaseError() throws SQLException {
         when(connectionInstance.prepareStatement(anyString())).thenThrow(new SQLException("Something went wrong"));
 
-        assertThrows(RuntimeException.class, () -> jobRepository.findAllByUserEmail("abc@example.com"));
+        assertThatThrownBy(() -> jobRepository.findAllByUserId("abc@example.com"))
+                .hasMessageContaining("Database error: Something went wrong");
     }
 }

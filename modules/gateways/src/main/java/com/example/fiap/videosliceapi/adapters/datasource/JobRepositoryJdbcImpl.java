@@ -17,14 +17,14 @@ import java.util.UUID;
 public class JobRepositoryJdbcImpl implements JobRepository {
     @Language("SQL")
     private final static String SQL_INSERT_JOB = "insert into slice_job " +
-                                                 "(job_id,input_file_uri,slice_interval_seconds,status,start_time,user_email) " +
+                                                 "(job_id,input_file_uri,slice_interval_seconds,status,start_time,user_id) " +
                                                  "values (?,?,?,?,?,?)";
 
     @Language("SQL")
-    private final static String SQL_SELECT_JOBS_BY_EMAIL = "select " +
+    private final static String SQL_SELECT_JOBS_BY_USER = "select " +
                                                            " job_id,input_file_uri,slice_interval_seconds,status,progress_current," +
-                                                           " progress_total,output_file_uri,error_message,start_time,end_time,user_email " +
-                                                           "from slice_job where user_email = ?";
+                                                           " progress_total,output_file_uri,error_message,start_time,end_time,user_id " +
+                                                           "from slice_job where user_id = ?";
 
     private final DatabaseConnection databaseConnection;
 
@@ -43,7 +43,7 @@ public class JobRepositoryJdbcImpl implements JobRepository {
             stmt.setString(4, job.status().name());
 
             stmt.setTimestamp(5, java.sql.Timestamp.from(job.startTime()));
-            stmt.setString(6, job.userEmail());
+            stmt.setString(6, job.userId());
 
             int ret = stmt.executeUpdate();
             if (ret != 1)
@@ -55,11 +55,11 @@ public class JobRepositoryJdbcImpl implements JobRepository {
     }
 
     @Override
-    public List<Job> findAllByUserEmail(String email) {
+    public List<Job> findAllByUserId(String userId) {
         try (var connection = databaseConnection.getConnection();
-             var stmt = connection.prepareStatement(SQL_SELECT_JOBS_BY_EMAIL)) {
+             var stmt = connection.prepareStatement(SQL_SELECT_JOBS_BY_USER)) {
 
-            stmt.setString(1, email);
+            stmt.setString(1, userId);
 
             List<Job> result = new ArrayList<>();
 
@@ -80,7 +80,7 @@ public class JobRepositoryJdbcImpl implements JobRepository {
                             rs.getString("error_message"),
                             rs.getTimestamp("start_time").toInstant(),
                             (rs.getTimestamp("end_time") != null ? rs.getTimestamp("end_time").toInstant() : null),
-                            rs.getString("user_email")
+                            rs.getString("user_id")
                     );
                     result.add(job);
                 }

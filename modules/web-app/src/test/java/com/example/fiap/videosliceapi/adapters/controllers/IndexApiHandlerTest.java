@@ -42,7 +42,7 @@ class IndexApiHandlerTest {
 
 //    @Test
 //    void getClienteConectado_autenticado() throws Exception {
-//        com.example.fiap.videosliceapi.domain.auth.LoggedUser usuarioLogado = mock(com.example.fiap.videosliceapi.domain.auth.LoggedUser.class);
+//        com.example.fiap.videosliceapi.adapters.auth.LoggedUser usuarioLogado = mock(com.example.fiap.videosliceapi.adapters.auth.LoggedUser.class);
 //        when(usuarioLogado.autenticado()).thenReturn(true);
 //
 //        when(usuarioLogado.getNome()).thenReturn("Alice");
@@ -68,7 +68,7 @@ class IndexApiHandlerTest {
 //
 //    @Test
 //    void getClienteConectado_naoAutenticado() throws Exception {
-//        com.example.fiap.videosliceapi.domain.auth.LoggedUser usuarioLogado = mock(com.example.fiap.videosliceapi.domain.auth.LoggedUser.class);
+//        com.example.fiap.videosliceapi.adapters.auth.LoggedUser usuarioLogado = mock(com.example.fiap.videosliceapi.adapters.auth.LoggedUser.class);
 //        when(usuarioLogado.autenticado()).thenReturn(false);
 //
 //        when(usuarioLogadoTokenParser.verificarUsuarioLogado(any())).thenReturn(usuarioLogado);
@@ -78,7 +78,7 @@ class IndexApiHandlerTest {
 //
 //    @Test
 //    void getClienteConectado_error() throws Exception {
-//        com.example.fiap.videosliceapi.domain.auth.LoggedUser loggedUser = mock(com.example.fiap.videosliceapi.domain.auth.LoggedUser.class);
+//        com.example.fiap.videosliceapi.adapters.auth.LoggedUser loggedUser = mock(com.example.fiap.videosliceapi.adapters.auth.LoggedUser.class);
 //        when(loggedUser.autenticado()).thenThrow(new RuntimeException("Something went wrong"));
 //
 //        when(usuarioLogadoTokenParser.verificarUsuarioLogado(any())).thenReturn(loggedUser);

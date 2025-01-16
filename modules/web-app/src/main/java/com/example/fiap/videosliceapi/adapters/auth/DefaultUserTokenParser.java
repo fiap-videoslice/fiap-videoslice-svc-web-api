@@ -1,14 +1,11 @@
 package com.example.fiap.videosliceapi.adapters.auth;
 
-import com.example.fiap.videosliceapi.domain.auth.LoggedUser;
-import com.example.fiap.videosliceapi.domain.auth.UserGroup;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SecurityException;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.VisibleForTesting;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 
 import java.util.List;
@@ -26,7 +23,6 @@ public class DefaultUserTokenParser implements LoggedUserTokenParser {
 
     private final JwtParser jwtParser;
 
-    @Autowired
     public DefaultUserTokenParser(CognitoJwksApi cognitoJwksApi) {
         jwtParser = Jwts.parser()
                 .keyLocator(new JwksKeyLocator(cognitoJwksApi))
@@ -49,7 +45,7 @@ public class DefaultUserTokenParser implements LoggedUserTokenParser {
             identityToken = headers.getFirst(HEADER_NAME_LOWER);
 
         if (identityToken == null) {
-            return new TokenBasedLoggedUser(false, null, null, null,
+            return new TokenBasedLoggedUser(false, null, null, null, null,
                     "IdentityToken is missing", null);
         }
 
@@ -58,7 +54,7 @@ public class DefaultUserTokenParser implements LoggedUserTokenParser {
             jwt = jwtParser.parse(identityToken);
         } catch (ExpiredJwtException | MalformedJwtException | SecurityException | IllegalArgumentException e) {
             LOGGER.warn("Erro validando IdentityToken: {} -- {}", e, identityToken);
-            return new TokenBasedLoggedUser(false, null, null, null,
+            return new TokenBasedLoggedUser(false, null, null, null, null,
                     "Erro ao validar IdentityToken: " + e.getMessage(), null);
         }
 
@@ -75,6 +71,7 @@ public class DefaultUserTokenParser implements LoggedUserTokenParser {
         }
 
         return new TokenBasedLoggedUser(true,
+                claims.get("sub", String.class),
                 claims.get("name", String.class),
                 claims.get("email", String.class),
                 group,
@@ -84,6 +81,7 @@ public class DefaultUserTokenParser implements LoggedUserTokenParser {
 
     private class TokenBasedLoggedUser implements LoggedUser {
         private final boolean authenticated;
+        private final String id;
         private final String name;
         private final String email;
         private final UserGroup group;
@@ -91,9 +89,10 @@ public class DefaultUserTokenParser implements LoggedUserTokenParser {
         private final String token;
 
         private TokenBasedLoggedUser(boolean authenticated,
-                                     String name, String email, UserGroup group,
+                                     String id, String name, String email, UserGroup group,
                                      String authError, String token) {
             this.authenticated = authenticated;
+            this.id = id;
             this.name = name;
             this.email = email;
             this.group = group;
@@ -105,29 +104,35 @@ public class DefaultUserTokenParser implements LoggedUserTokenParser {
             return authenticated;
         }
 
+        public String getUserId() {
+            if (!authenticated)
+                throw new IllegalStateException("User not authenticated");
+            return id;
+        }
+        
         public String getName() {
             if (!authenticated)
-                throw new IllegalStateException("Usuario não autenticado");
+                throw new IllegalStateException("User not authenticated");
             return name;
         }
 
         @Override
         public String getEmail() {
             if (!authenticated)
-                throw new IllegalStateException("Usuario não autenticado");
+                throw new IllegalStateException("User not authenticated");
             return email;
         }
 
         public UserGroup getGroup() {
             if (!authenticated)
-                throw new IllegalStateException("Usuario não autenticado");
+                throw new IllegalStateException("User not authenticated");
             return group;
         }
 
         @Override
         public String identityToken() {
             if (!authenticated)
-                throw new IllegalStateException("Usuario não autenticado");
+                throw new IllegalStateException("User not authenticated");
             return token;
         }
 

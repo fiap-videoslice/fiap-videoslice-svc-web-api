@@ -1,7 +1,5 @@
 package com.example.fiap.videosliceapi.domain.usecases;
 
-import com.example.fiap.videosliceapi.domain.exception.DomainPermissionException;
-import com.example.fiap.videosliceapi.domain.auth.LoggedUser;
 import com.example.fiap.videosliceapi.domain.datagateway.JobRepository;
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
@@ -10,7 +8,6 @@ import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
 import com.example.fiap.videosliceapi.domain.utils.IdGenerator;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,25 +28,17 @@ public class JobUseCases {
         this.idGenerator = idGenerator;
     }
 
-    public List<Job> listJobsFromUser(LoggedUser loggedUser) {
-        if (!loggedUser.authenticated()) {
-            throw new DomainPermissionException("User must be authenticated to list jobs");
-        }
-
-        return jobRepository.findAllByUserEmail(loggedUser.getEmail());
+    public List<Job> listJobsFromUser(String userId) {
+        return jobRepository.findAllByUserId(userId);
     }
 
-    public Job createNewJob(CreateJobParam param, LoggedUser loggedUser) {
-        if (!loggedUser.authenticated()) {
-            throw new DomainPermissionException("User must be authenticated to start a job");
-        }
-
+    public Job createNewJob(CreateJobParam param, String userId) {
         UUID uuid = idGenerator.newId();
 
         String uri = mediaStorage.saveInputVideo(uuid, param.inputFileContents());
 
         Job newJob = Job.createJob(uuid, uri, param.sliceIntervalSeconds(), clock.now(),
-                loggedUser.getEmail());
+                userId);
 
         jobRepository.saveNewJob(newJob);
         try {

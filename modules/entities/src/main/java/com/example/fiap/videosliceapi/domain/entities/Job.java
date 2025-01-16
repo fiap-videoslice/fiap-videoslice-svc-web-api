@@ -23,7 +23,7 @@ public record Job(
         @NotNull Instant startTime,
         @Nullable Instant endTime,
 
-        @NotNull String userEmail
+        @NotNull String userId
 ) {
 
     /**
@@ -32,7 +32,7 @@ public record Job(
      * @param inputFileUri         the URI of the input file (required)
      * @param sliceIntervalSeconds the slice interval in seconds (required)
      * @param startTime            the start time of the job (required)
-     * @param userEmail            the user identification (required)
+     * @param userId            the user identification (required)
      * @return a new Job instance
      */
     public static Job createJob(
@@ -40,7 +40,7 @@ public record Job(
             @NotNull String inputFileUri,
             int sliceIntervalSeconds,
             @NotNull Instant startTime,
-            @NotNull String userEmail
+            @NotNull String userId
     ) {
         return new Job(
                 id,
@@ -52,7 +52,7 @@ public record Job(
                 null,
                 startTime,
                 null,
-                userEmail
+                userId
         );
     }
 

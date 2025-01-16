@@ -7,5 +7,5 @@ import java.util.List;
 public interface JobRepository {
     void saveNewJob(Job job);
 
-    List<Job> findAllByUserEmail(String email);
+    List<Job> findAllByUserId(String userId);
 }

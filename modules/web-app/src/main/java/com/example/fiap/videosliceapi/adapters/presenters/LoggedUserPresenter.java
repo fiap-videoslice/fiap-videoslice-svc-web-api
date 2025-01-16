@@ -1,6 +1,6 @@
 package com.example.fiap.videosliceapi.adapters.presenters;
 
-import com.example.fiap.videosliceapi.domain.auth.LoggedUser;
+import com.example.fiap.videosliceapi.adapters.auth.LoggedUser;
 
 import java.util.Map;
 

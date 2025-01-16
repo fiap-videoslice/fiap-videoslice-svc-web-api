@@ -4,11 +4,11 @@ import com.example.fiap.videosliceapi.adapters.auth.LoggedUserTokenParser;
 import com.example.fiap.videosliceapi.adapters.datasource.TransactionManager;
 import com.example.fiap.videosliceapi.adapters.dto.JobDto;
 import com.example.fiap.videosliceapi.adapters.dto.NewJobResponse;
+import com.example.fiap.videosliceapi.apiutils.LoggedUserCheck;
 import com.example.fiap.videosliceapi.apiutils.WebUtils;
-import com.example.fiap.videosliceapi.domain.auth.LoggedUser;
+import com.example.fiap.videosliceapi.adapters.auth.LoggedUser;
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.exception.DomainArgumentException;
-import com.example.fiap.videosliceapi.domain.exception.DomainPermissionException;
 import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,12 +44,12 @@ public class JobApiHandler {
     @GetMapping(path = "/jobs", produces = "application/json")
     public ResponseEntity<List<JobDto>> listUserJobs(@RequestHeader HttpHeaders headers) {
         try {
-            LoggedUser loggedUser = loggedUserTokenParser.verifyLoggedUser(headers);
-            List<Job> jobs = jobUseCases.listJobsFromUser(loggedUser);
+            LoggedUser loggedUser = LoggedUserCheck.ensureLoggedUser(loggedUserTokenParser, headers);
+            List<Job> jobs = jobUseCases.listJobsFromUser(loggedUser.getUserId());
             return WebUtils.okResponse(jobs.stream().map(JobDto::fromEntity).toList());
 
-        } catch (DomainPermissionException dae) {
-            return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, dae.getMessage());
+        } catch (LoggedUserCheck.NotAuthenticatedException nae) {
+            return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, nae.getMessage());
         } catch (DomainArgumentException iae) {
             return WebUtils.errorResponse(HttpStatus.BAD_REQUEST, iae.getMessage());
         } catch (Exception e) {
@@ -76,14 +76,14 @@ public class JobApiHandler {
         Job newJob;
 
         try {
+            LoggedUser loggedUser = LoggedUserCheck.ensureLoggedUser(loggedUserTokenParser, headers);
             byte[] fileContent = videoFile.getBytes();
-            LoggedUser loggedUser = loggedUserTokenParser.verifyLoggedUser(headers);
 
             newJob = transactionManager.runInTransaction(() -> jobUseCases.createNewJob(
-                    new CreateJobParam(fileContent, sliceIntervalSeconds), loggedUser));
+                    new CreateJobParam(fileContent, sliceIntervalSeconds), loggedUser.getUserId()));
 
-        } catch (DomainPermissionException dae) {
-            return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, dae.getMessage());
+        } catch (LoggedUserCheck.NotAuthenticatedException nae) {
+            return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, nae.getMessage());
         } catch (DomainArgumentException iae) {
             return WebUtils.errorResponse(HttpStatus.BAD_REQUEST, iae.getMessage());
         } catch (Exception e) {

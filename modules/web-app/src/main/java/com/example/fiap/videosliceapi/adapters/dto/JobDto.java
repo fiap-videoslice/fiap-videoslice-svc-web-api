@@ -18,7 +18,7 @@ public record JobDto(
         String startTime,
         String endTime,
 
-        String userEmail
+        String userId
 ) {
 
     public static JobDto fromEntity(Job job) {
@@ -33,7 +33,7 @@ public record JobDto(
                 job.errorMessage(),
                 job.startTime().toString(),
                 job.endTime() != null ? job.endTime().toString() : null,
-                job.userEmail()
+                job.userId()
         );
     }
 }
