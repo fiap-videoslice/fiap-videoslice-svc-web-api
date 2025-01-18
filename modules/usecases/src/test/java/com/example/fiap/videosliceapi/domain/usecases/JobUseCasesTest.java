@@ -54,9 +54,9 @@ class JobUseCasesTest {
         CreateJobParam param = new CreateJobParam(TestConstants.VIDEO_BYTES, 10);
 
         Job expectedNewJob = Job.createJob(TestConstants.ID_1, "/input/video_abcXyz.mp4",
-                param.sliceIntervalSeconds(), TestConstants.INSTANT_1, "test-user@example.com");
+                param.sliceIntervalSeconds(), TestConstants.INSTANT_1, "User_123_456");
 
-        Job result = jobUseCases.createNewJob(param, "test-user@example.com");
+        Job result = jobUseCases.createNewJob(param, "User_123_456");
 
         assertThat(result).isEqualTo(expectedNewJob);
 
@@ -67,29 +67,29 @@ class JobUseCasesTest {
     @Test
     void listJobsFromUser() {
         List<Job> expectedJobs = List.of(
-                Job.createJob(TestConstants.ID_1, "/input/video1.mp4", 10, TestConstants.INSTANT_1, "test-user@example.com"),
+                Job.createJob(TestConstants.ID_1, "/input/video1.mp4", 10, TestConstants.INSTANT_1, "User_123_456"),
                 new Job(TestConstants.ID_2, "/input/video2.mp4", 15,
                         JobStatus.COMPLETE,
                         "/output/video2.mp4", null, TestConstants.INSTANT_1,
-                        TestConstants.INSTANT_2, "test-user@example.com")
+                        TestConstants.INSTANT_2, "User_123_456")
         );
 
-        when(jobRepository.findAllByUserId("test-user@example.com")).thenReturn(expectedJobs);
+        when(jobRepository.findAllByUserId("User_123_456")).thenReturn(expectedJobs);
 
-        List<Job> result = jobUseCases.listJobsFromUser("test-user@example.com");
+        List<Job> result = jobUseCases.listJobsFromUser("User_123_456");
 
         assertThat(result).isEqualTo(expectedJobs);
-        verify(jobRepository).findAllByUserId("test-user@example.com");
+        verify(jobRepository).findAllByUserId("User_123_456");
     }
 
     @Test
     void listJobsFromUser_noJobsFound() {
-        when(jobRepository.findAllByUserId("test-user@example.com")).thenReturn(List.of());
+        when(jobRepository.findAllByUserId("User_123_456")).thenReturn(List.of());
 
-        List<Job> result = jobUseCases.listJobsFromUser("test-user@example.com");
+        List<Job> result = jobUseCases.listJobsFromUser("User_123_456");
 
         assertThat(result).isEmpty();
-        verify(jobRepository).findAllByUserId("test-user@example.com");
+        verify(jobRepository).findAllByUserId("User_123_456");
     }
 
     @Test
@@ -99,7 +99,7 @@ class JobUseCasesTest {
                 "/input/video1.mp4",
                 10,
                 TestConstants.INSTANT_1,
-                "test-user@example.com");
+                "User_123_456");
 
         when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
 
@@ -119,7 +119,7 @@ class JobUseCasesTest {
                 "/input/video1.mp4",
                 10,
                 TestConstants.INSTANT_1,
-                "test-user@example.com");
+                "User_123_456");
 
         when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
         when(clock.now()).thenReturn(TestConstants.INSTANT_2);
@@ -140,7 +140,7 @@ class JobUseCasesTest {
                 "/input/video1.mp4",
                 10,
                 TestConstants.INSTANT_1,
-                "test-user@example.com");
+                "User_123_456");
 
         when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
         when(clock.now()).thenReturn(TestConstants.INSTANT_2);
@@ -175,7 +175,7 @@ class JobUseCasesTest {
                 "/input/video1.mp4",
                 10,
                 TestConstants.INSTANT_1,
-                "test-user@example.com");
+                "User_123_456");
 
         when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
 

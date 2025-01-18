@@ -49,7 +49,7 @@ class JobRepositoryJdbcImplIT {
         Instant createdAt = Instant.ofEpochMilli(1736297743000L);
 
         Job job = Job.createJob(uuid, "/input/2e08ad6d-1c29-4d50-950e-7b7011c9f484.mp4", 5,
-                createdAt, "user1@example");
+                createdAt, "Test-User-Abc");
 
         repository.saveNewJob(job);
 
@@ -59,13 +59,13 @@ class JobRepositoryJdbcImplIT {
             assertThat(rs.getInt("slice_interval_seconds")).isEqualTo(5);
             assertThat(rs.getString("status")).isEqualTo("CREATED");
             assertThat(rs.getTimestamp("start_time").toInstant()).isEqualTo(createdAt);
-            assertThat(rs.getString("user_id")).isEqualTo("user1@example");
+            assertThat(rs.getString("user_id")).isEqualTo("Test-User-Abc");
         });
     }
 
     @Test
     void findAllByUserId_created_and_complete_examples() throws SQLException {
-        List<Job> jobs = repository.findAllByUserId("user1@fiap.example.com");
+        List<Job> jobs = repository.findAllByUserId("Test_User_1");
 
         assertThat(jobs).hasSize(2);
 
@@ -78,7 +78,7 @@ class JobRepositoryJdbcImplIT {
         assertThat(job1.errorMessage()).isNull();
         assertThat(job1.startTime()).isEqualTo(Instant.parse("2024-01-09T15:30:12Z"));
         assertThat(job1.endTime()).isNull();
-        assertThat(job1.userId()).isEqualTo("user1@fiap.example.com");
+        assertThat(job1.userId()).isEqualTo("Test_User_1");
 
         Job job2 = jobs.get(1);
         assertThat(job2.id()).isEqualTo(UUID.fromString("6c9dcf45-15e5-4ab9-babe-7fe089194beb"));
@@ -89,12 +89,12 @@ class JobRepositoryJdbcImplIT {
         assertThat(job2.errorMessage()).isNull();
         assertThat(job2.startTime()).isEqualTo(Instant.parse("2024-01-08T20:00:00Z"));
         assertThat(job2.endTime()).isEqualTo(Instant.parse("2024-01-08T22:45:46Z"));
-        assertThat(job2.userId()).isEqualTo("user1@fiap.example.com");
+        assertThat(job2.userId()).isEqualTo("Test_User_1");
     }
 
     @Test
     void findAllByUserId_processing_and_failed_examples() throws SQLException {
-        List<Job> jobs = repository.findAllByUserId("user2@fiap.example.com");
+        List<Job> jobs = repository.findAllByUserId("Test_User_2");
 
         assertThat(jobs).hasSize(2);
 
@@ -107,7 +107,7 @@ class JobRepositoryJdbcImplIT {
         assertThat(job1.errorMessage()).isNull();
         assertThat(job1.startTime()).isEqualTo(Instant.parse("2024-01-09T15:20:52Z"));
         assertThat(job1.endTime()).isNull();
-        assertThat(job1.userId()).isEqualTo("user2@fiap.example.com");
+        assertThat(job1.userId()).isEqualTo("Test_User_2");
 
         Job job2 = jobs.get(1);
         assertThat(job2.id()).isEqualTo(UUID.fromString("a31f6b5e-0d4e-4070-9fc9-f9cc5e5c61b1"));
@@ -118,7 +118,7 @@ class JobRepositoryJdbcImplIT {
         assertThat(job2.errorMessage()).isEqualTo("The video file is invalid");
         assertThat(job2.startTime()).isEqualTo(Instant.parse("2024-01-08T10:00:00Z"));
         assertThat(job2.endTime()).isEqualTo(Instant.parse("2024-01-08T10:00:01Z"));
-        assertThat(job2.userId()).isEqualTo("user2@fiap.example.com");
+        assertThat(job2.userId()).isEqualTo("Test_User_2");
     }
 
     @Test
@@ -134,7 +134,7 @@ class JobRepositoryJdbcImplIT {
         assertThat(job.errorMessage()).isNull();
         assertThat(job.startTime()).isEqualTo(Instant.parse("2024-01-09T15:30:12Z"));
         assertThat(job.endTime()).isNull();
-        assertThat(job.userId()).isEqualTo("user1@fiap.example.com");
+        assertThat(job.userId()).isEqualTo("Test_User_1");
     }
 
     @Test

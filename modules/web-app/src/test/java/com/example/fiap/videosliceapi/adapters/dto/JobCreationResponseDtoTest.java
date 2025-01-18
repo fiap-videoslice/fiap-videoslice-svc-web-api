@@ -8,7 +8,7 @@ import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class NewJobResponseTest {
+class JobCreationResponseDtoTest {
 
     @Test
     void fromEntity_shouldMapJobToNewJobResponse() {
@@ -17,10 +17,10 @@ class NewJobResponseTest {
                 "/inputs/input-file.mp4",
                 10,
                 Instant.now(),
-                "user@example.com"
+                "User_123_ABC"
         );
 
-        NewJobResponse response = NewJobResponse.fromEntity(job);
+        JobCreationResponseDto response = JobCreationResponseDto.fromEntity(job);
 
         assertThat(response.id()).isEqualTo("123e4567-e89b-12d3-a456-426614174000");
         assertThat(response.sliceIntervalSeconds()).isEqualTo(10);
@@ -29,7 +29,7 @@ class NewJobResponseTest {
 
     @Test
     void fromError_shouldReturnNewJobResponseWithErrorMessage() {
-        NewJobResponse response = NewJobResponse.fromError("An error occurred");
+        JobCreationResponseDto response = JobCreationResponseDto.fromError("An error occurred");
 
         assertThat(response.id()).isNull();
         assertThat(response.sliceIntervalSeconds()).isNull();

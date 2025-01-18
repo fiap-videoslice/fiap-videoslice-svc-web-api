@@ -37,7 +37,7 @@ class JobRepositoryJdbcImplTest {
         when(connectionInstance.prepareStatement(anyString())).thenThrow(new SQLException("Something went wrong"));
 
         Job job = Job.createJob(UUID.randomUUID(),
-                "/inputs/file.mp4", 10, Instant.now(), "abc@example.com");
+                "/inputs/file.mp4", 10, Instant.now(), "User_ABC");
 
         assertThatThrownBy(() -> jobRepository.saveNewJob(job))
                 .hasMessageContaining("Database error: Something went wrong");
@@ -47,7 +47,7 @@ class JobRepositoryJdbcImplTest {
     void findAllByUserId_databaseError() throws SQLException {
         when(connectionInstance.prepareStatement(anyString())).thenThrow(new SQLException("Something went wrong"));
 
-        assertThatThrownBy(() -> jobRepository.findAllByUserId("abc@example.com"))
+        assertThatThrownBy(() -> jobRepository.findAllByUserId("User_ABC"))
                 .hasMessageContaining("Database error: Something went wrong");
     }
 }

@@ -3,7 +3,7 @@ package com.example.fiap.videosliceapi.adapters.controllers;
 import com.example.fiap.videosliceapi.adapters.auth.LoggedUserTokenParser;
 import com.example.fiap.videosliceapi.adapters.datasource.TransactionManager;
 import com.example.fiap.videosliceapi.adapters.dto.JobDto;
-import com.example.fiap.videosliceapi.adapters.dto.NewJobResponse;
+import com.example.fiap.videosliceapi.adapters.dto.JobCreationResponseDto;
 import com.example.fiap.videosliceapi.apiutils.LoggedUserCheck;
 import com.example.fiap.videosliceapi.apiutils.WebUtils;
 import com.example.fiap.videosliceapi.adapters.auth.LoggedUser;
@@ -61,14 +61,14 @@ public class JobApiHandler {
     @Operation(summary = "Starts a new Video Processing Job",
             description = "Uploads a video file and the sliceIntervalSeconds metadata, using a multi-part form")
     @PostMapping(path = "/jobs", consumes = "multipart/form-data", produces = "application/json")
-    public ResponseEntity<NewJobResponse> startNewJob(
+    public ResponseEntity<JobCreationResponseDto> startNewJob(
             @RequestHeader HttpHeaders headers,
             @RequestParam("file") MultipartFile videoFile,
             @RequestParam("sliceIntervalSeconds") String sliceIntervalSecondsParam) {
 
         if (videoFile == null || videoFile.isEmpty()) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    NewJobResponse.fromError("Missing video file"));
+                    JobCreationResponseDto.fromError("Missing video file"));
         }
 
         Integer sliceIntervalSeconds = Integer.parseInt(sliceIntervalSecondsParam);
@@ -91,6 +91,6 @@ public class JobApiHandler {
             return WebUtils.errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error while creating or starting job");
         }
 
-        return WebUtils.okResponse(NewJobResponse.fromEntity(newJob));
+        return WebUtils.okResponse(JobCreationResponseDto.fromEntity(newJob));
     }
 }

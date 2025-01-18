@@ -30,6 +30,7 @@ class DummyTokenParserTest {
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isTrue();
+        assertThat(loggedUser.getUserId()).isEqualTo("Test-User-1");
         assertThat(loggedUser.getName()).isEqualTo("Test User 1");
         assertThat(loggedUser.getEmail()).isEqualTo("user1@fiap.example.com");
         assertThat(loggedUser.getGroup()).isEqualTo(UserGroup.User);
@@ -44,6 +45,7 @@ class DummyTokenParserTest {
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isTrue();
+        assertThat(loggedUser.getUserId()).isEqualTo("Test-User-2");
         assertThat(loggedUser.getName()).isEqualTo("Test User 2");
         assertThat(loggedUser.getEmail()).isEqualTo("user2@fiap.example.com");
         assertThat(loggedUser.getGroup()).isEqualTo(UserGroup.User);
@@ -58,6 +60,7 @@ class DummyTokenParserTest {
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isTrue();
+        assertThat(loggedUser.getUserId()).isEqualTo("Test-User-Admin-1");
         assertThat(loggedUser.getName()).isEqualTo("Test Admin");
         assertThat(loggedUser.getEmail()).isEqualTo("admin@fiap.example.com");
         assertThat(loggedUser.getGroup()).isEqualTo(UserGroup.Admin);
@@ -86,6 +89,7 @@ class DummyTokenParserTest {
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isTrue();
+        assertThat(loggedUser.getUserId()).isEqualTo("Test-User-1");
         assertThat(loggedUser.getName()).isEqualTo("Test User 1");
         assertThat(loggedUser.getEmail()).isEqualTo("user1@fiap.example.com");
         assertThat(loggedUser.getGroup()).isEqualTo(UserGroup.User);

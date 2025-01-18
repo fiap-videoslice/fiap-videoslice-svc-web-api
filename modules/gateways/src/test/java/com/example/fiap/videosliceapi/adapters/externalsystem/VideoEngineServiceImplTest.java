@@ -41,7 +41,7 @@ public class VideoEngineServiceImplTest {
         String inputFileUri = "/inputs/input-file.mp4";
         int sliceIntervalSeconds = 10;
         Instant startTime = Instant.now();
-        String userId = "user@example.com";
+        String userId = "User_ABC";
 
         Job job = Job.createJob(jobId, inputFileUri, sliceIntervalSeconds, startTime, userId);
 
