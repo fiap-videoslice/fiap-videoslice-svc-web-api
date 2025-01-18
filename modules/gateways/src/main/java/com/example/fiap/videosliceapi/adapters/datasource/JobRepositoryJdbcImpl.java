@@ -2,9 +2,9 @@ package com.example.fiap.videosliceapi.adapters.datasource;
 
 import com.example.fiap.videosliceapi.domain.datagateway.JobRepository;
 import com.example.fiap.videosliceapi.domain.entities.Job;
-import com.example.fiap.videosliceapi.domain.valueobjects.JobProgress;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 import org.intellij.lang.annotations.Language;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
@@ -22,9 +22,19 @@ public class JobRepositoryJdbcImpl implements JobRepository {
 
     @Language("SQL")
     private final static String SQL_SELECT_JOBS_BY_USER = "select " +
-                                                           " job_id,input_file_uri,slice_interval_seconds,status,progress_current," +
-                                                           " progress_total,output_file_uri,error_message,start_time,end_time,user_id " +
-                                                           "from slice_job where user_id = ?";
+                                                          " job_id,input_file_uri,slice_interval_seconds,status," +
+                                                          " output_file_uri,error_message,start_time,end_time,user_id " +
+                                                          "from slice_job where user_id = ?";
+    @Language("SQL")
+    private final static String SQL_FIND_JOB_BY_ID = "select " +
+                                                     " job_id,input_file_uri,slice_interval_seconds,status," +
+                                                     " output_file_uri,error_message,start_time,end_time,user_id " +
+                                                     "from slice_job where job_id = ?";
+
+    @Language("SQL")
+    private final static String SQL_UPDATE_JOB = "update slice_job " +
+                                                 "set status = ?, output_file_uri = ?, error_message = ?, end_time = ? " +
+                                                 "where job_id = ?";
 
     private final DatabaseConnection databaseConnection;
 
@@ -65,23 +75,7 @@ public class JobRepositoryJdbcImpl implements JobRepository {
 
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
-                    int progressCurrent = rs.getInt("progress_current");
-                    int progressTotal = rs.getInt("progress_total");
-                    Job job = new Job(
-                            rs.getObject("job_id", UUID.class),
-                            rs.getString("input_file_uri"),
-                            rs.getInt("slice_interval_seconds"),
-                            JobStatus.valueOf(rs.getString("status")),
-                            progressCurrent == 0 && progressTotal == 0 ? null : new JobProgress(
-                                    progressCurrent,
-                                    progressTotal
-                            ),
-                            rs.getString("output_file_uri"),
-                            rs.getString("error_message"),
-                            rs.getTimestamp("start_time").toInstant(),
-                            (rs.getTimestamp("end_time") != null ? rs.getTimestamp("end_time").toInstant() : null),
-                            rs.getString("user_id")
-                    );
+                    Job job = mapJobFromRs(rs);
                     result.add(job);
                 }
             }
@@ -91,5 +85,59 @@ public class JobRepositoryJdbcImpl implements JobRepository {
         } catch (SQLException e) {
             throw new RuntimeException("(" + this.getClass().getSimpleName() + ") Database error: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public Job findById(UUID id, boolean forUpdate) {
+        String sql = SQL_FIND_JOB_BY_ID + (forUpdate ? " FOR UPDATE" : "");
+
+        try (var connection = databaseConnection.getConnection();
+             var stmt = connection.prepareStatement(sql)) {
+
+            stmt.setObject(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return null;
+                }
+                return mapJobFromRs(rs);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("(" + this.getClass().getSimpleName() + ") Database error: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    public void updateMutableAttributes(Job job) {
+        try (var connection = databaseConnection.getConnection();
+             var stmt = connection.prepareStatement(SQL_UPDATE_JOB)) {
+    
+            stmt.setString(1, job.status().name());
+            stmt.setString(2, job.outputFileUri());
+            stmt.setString(3, job.errorMessage());
+            stmt.setTimestamp(4, job.endTime() != null ? java.sql.Timestamp.from(job.endTime()) : null);
+            stmt.setObject(5, job.id());
+    
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected != 1)
+                throw new IllegalStateException("Update failed, inconsistent result: " + rowsAffected);
+        } catch (SQLException e) {
+            throw new RuntimeException("(" + this.getClass().getSimpleName() + ") Database error: " + e.getMessage(), e);
+        }
+    }
+
+    private static @NotNull Job mapJobFromRs(ResultSet rs) throws SQLException {
+        return new Job(
+                rs.getObject("job_id", UUID.class),
+                rs.getString("input_file_uri"),
+                rs.getInt("slice_interval_seconds"),
+                JobStatus.valueOf(rs.getString("status")),
+                rs.getString("output_file_uri"),
+                rs.getString("error_message"),
+                rs.getTimestamp("start_time").toInstant(),
+                (rs.getTimestamp("end_time") != null ? rs.getTimestamp("end_time").toInstant() : null),
+                rs.getString("user_id")
+        );
     }
 }

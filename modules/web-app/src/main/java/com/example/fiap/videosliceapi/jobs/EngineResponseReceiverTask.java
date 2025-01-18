@@ -1,35 +1,30 @@
 package com.example.fiap.videosliceapi.jobs;
 
+import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
+import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.function.Consumer;
-
 @Component
-public class EngineResponseReceiverTask /*implements Consumer<Pagamento>*/ {
+public class EngineResponseReceiverTask {
     private static final Logger LOGGER = LoggerFactory.getLogger(EngineResponseReceiverTask.class);
 
-//    private final PagamentoService pagamentoService;
-//    private final PedidoUseCases pedidoUseCases;
-//
-//    public EngineResponseReceiverTask(PagamentoService pagamentoService, PedidoUseCases pedidoUseCases) {
-//        this.pagamentoService = pagamentoService;
-//        this.pedidoUseCases = pedidoUseCases;
-//    }
-//
+    private final VideoEngineService videoEngineService;
+    private final JobUseCases jobUseCases;
+
+    public EngineResponseReceiverTask(VideoEngineService videoEngineService, JobUseCases jobUseCases) {
+        this.videoEngineService = videoEngineService;
+        this.jobUseCases = jobUseCases;
+    }
+
     @Scheduled(fixedDelay = 5000)
     public void readEngineResponse() {
-//        try {
-//            pagamentoService.receberConfirmacoes(this);
-//        } catch (Exception e) {
-//            LOGGER.error("Erro tratando confirmações de pagamento! {}", e, e);
-//        }
+        try {
+            videoEngineService.receiveAvailableResponseMessages(jobUseCases::updateJobStatus);
+        } catch (Exception e) {
+            LOGGER.error("Error receiving responses! {}", e, e);
+        }
     }
-//
-//    @Override
-//    public void accept(Pagamento pagamento) {
-//        pedidoUseCases.finalizarPagamento(pagamento);
-//    }
 }

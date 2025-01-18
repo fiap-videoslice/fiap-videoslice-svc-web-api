@@ -134,7 +134,7 @@ class VideoEngineServiceQueueApiIT {
                 .containsExactlyInAnyOrder(testMessage1, testMessage2);
 
         for (VideoEngineServiceQueueApi.MessageSummary message : messages) {
-            queueApi.deleteMessagesQueueConfirmacao(message);
+            queueApi.deleteMessagesResponseQueue(message);
         }
 
         // Waiting past the Visibility Timeout

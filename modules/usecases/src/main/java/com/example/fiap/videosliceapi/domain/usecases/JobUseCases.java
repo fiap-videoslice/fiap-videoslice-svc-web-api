@@ -7,6 +7,8 @@ import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
 import com.example.fiap.videosliceapi.domain.utils.IdGenerator;
+import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
+import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,5 +50,26 @@ public class JobUseCases {
         }
 
         return newJob;
+    }
+
+    public void updateJobStatus(JobResponse response) {
+        Job job = jobRepository.findById(response.id(), true);
+
+        if (job == null) {
+            throw new RuntimeException("Inconsistent response, job [" + response.id() + "] not found");
+        }
+
+        Job updated;
+        if (response.status() == JobStatus.PROCESSING) {
+            updated = job.startProcessing();
+        } else if (response.status() == JobStatus.COMPLETE) {
+            updated = job.completeProcessing(response.outputFileUri(), clock.now());
+        } else if (response.status() == JobStatus.FAILED) {
+            updated = job.errorProcessing(response.message(), clock.now());
+        } else {
+            throw new RuntimeException("Invalid status for transition: " + response.status());
+        }
+
+        jobRepository.updateMutableAttributes(updated);
     }
 }

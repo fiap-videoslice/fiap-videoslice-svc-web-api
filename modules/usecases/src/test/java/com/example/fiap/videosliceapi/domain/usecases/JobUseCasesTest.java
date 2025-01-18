@@ -8,8 +8,9 @@ import com.example.fiap.videosliceapi.domain.testUtils.TestConstants;
 import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
 import com.example.fiap.videosliceapi.domain.utils.IdGenerator;
-import com.example.fiap.videosliceapi.domain.valueobjects.JobProgress;
+import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -68,7 +69,7 @@ class JobUseCasesTest {
         List<Job> expectedJobs = List.of(
                 Job.createJob(TestConstants.ID_1, "/input/video1.mp4", 10, TestConstants.INSTANT_1, "test-user@example.com"),
                 new Job(TestConstants.ID_2, "/input/video2.mp4", 15,
-                        JobStatus.FINISHED, new JobProgress(100, 100),
+                        JobStatus.COMPLETE,
                         "/output/video2.mp4", null, TestConstants.INSTANT_1,
                         TestConstants.INSTANT_2, "test-user@example.com")
         );
@@ -89,5 +90,102 @@ class JobUseCasesTest {
 
         assertThat(result).isEmpty();
         verify(jobRepository).findAllByUserId("test-user@example.com");
+    }
+
+    @Test
+    void updateJobStatus_toProcessing() {
+        Job job = Job.createJob(
+                TestConstants.ID_1,
+                "/input/video1.mp4",
+                10,
+                TestConstants.INSTANT_1,
+                "test-user@example.com");
+
+        when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
+
+        JobResponse response = new JobResponse(TestConstants.ID_1, JobStatus.PROCESSING, null, null);
+
+        jobUseCases.updateJobStatus(response);
+
+        Job expectedJob = job.startProcessing();
+
+        verify(jobRepository).updateMutableAttributes(expectedJob);
+    }
+
+    @Test
+    void updateJobStatus_toComplete() {
+        Job job = Job.createJob(
+                TestConstants.ID_1,
+                "/input/video1.mp4",
+                10,
+                TestConstants.INSTANT_1,
+                "test-user@example.com");
+
+        when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
+        when(clock.now()).thenReturn(TestConstants.INSTANT_2);
+
+        JobResponse response = new JobResponse(TestConstants.ID_1, JobStatus.COMPLETE, "/output/video1.mp4", null);
+
+        jobUseCases.updateJobStatus(response);
+
+        Job expectedJob = job.completeProcessing("/output/video1.mp4", TestConstants.INSTANT_2);
+
+        verify(jobRepository).updateMutableAttributes(expectedJob);
+    }
+
+    @Test
+    void updateJobStatus_toFailed() {
+        Job job = Job.createJob(
+                TestConstants.ID_1,
+                "/input/video1.mp4",
+                10,
+                TestConstants.INSTANT_1,
+                "test-user@example.com");
+
+        when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
+        when(clock.now()).thenReturn(TestConstants.INSTANT_2);
+
+        JobResponse response = new JobResponse(TestConstants.ID_1, JobStatus.FAILED, null, "Processing error");
+
+        jobUseCases.updateJobStatus(response);
+
+        Job expectedJob = job.errorProcessing("Processing error", TestConstants.INSTANT_2);
+
+        verify(jobRepository).updateMutableAttributes(expectedJob);
+    }
+
+    @Test
+    void updateJobStatus_jobNotFound() {
+        when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(null);
+
+        JobResponse response = new JobResponse(TestConstants.ID_1, JobStatus.PROCESSING, null, null);
+
+        RuntimeException exception = Assertions.assertThrows(
+                RuntimeException.class,
+                () -> jobUseCases.updateJobStatus(response)
+        );
+
+        assertThat(exception.getMessage()).isEqualTo("Inconsistent response, job [123e4567-e89b-12d3-a456-426614174000] not found");
+    }
+
+    @Test
+    void updateJobStatus_invalidStatusTransition() {
+        Job job = Job.createJob(
+                TestConstants.ID_1,
+                "/input/video1.mp4",
+                10,
+                TestConstants.INSTANT_1,
+                "test-user@example.com");
+
+        when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
+
+        JobResponse response = new JobResponse(TestConstants.ID_1, JobStatus.CREATED, null, null);
+
+        RuntimeException exception = Assertions.assertThrows(
+                RuntimeException.class,
+                () -> jobUseCases.updateJobStatus(response)
+        );
+
+        assertThat(exception.getMessage()).isEqualTo("Invalid status for transition: CREATED");
     }
 }

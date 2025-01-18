@@ -1,6 +1,6 @@
 package com.example.fiap.videosliceapi.domain.entities;
 
-import com.example.fiap.videosliceapi.domain.valueobjects.JobProgress;
+import com.example.fiap.videosliceapi.domain.exception.DomainArgumentException;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,7 +15,6 @@ public record Job(
         int sliceIntervalSeconds,
 
         @NotNull JobStatus status,
-        @Nullable JobProgress progress,
 
         @Nullable String outputFileUri,
         @Nullable String errorMessage,
@@ -49,11 +48,63 @@ public record Job(
                 JobStatus.CREATED,
                 null,
                 null,
-                null,
                 startTime,
                 null,
                 userId
         );
     }
 
+    public Job startProcessing() {
+        if (this.status != JobStatus.CREATED) {
+            throw new DomainArgumentException("Invalid state to start processing: " + this.status);
+        }
+
+        return new Job(
+                this.id,
+                this.inputFileUri,
+                this.sliceIntervalSeconds,
+                JobStatus.PROCESSING,
+                this.outputFileUri,
+                this.errorMessage,
+                this.startTime,
+                this.endTime,
+                this.userId
+        );
+    }
+
+    public Job errorProcessing(String errorMessage, Instant endTime) {
+        if (this.status != JobStatus.PROCESSING && this.status != JobStatus.CREATED) {
+            throw new DomainArgumentException("Invalid state to mark error: " + this.status);
+        }
+        
+        return new Job(
+                this.id,
+                this.inputFileUri,
+                this.sliceIntervalSeconds,
+                JobStatus.FAILED,
+                this.outputFileUri,
+                errorMessage,
+                this.startTime,
+                endTime,
+                this.userId
+        );
+    }
+    
+    public Job completeProcessing(String outputFileUri, Instant endTime) {
+        if (this.status != JobStatus.PROCESSING && this.status != JobStatus.CREATED) {
+            throw new DomainArgumentException("Invalid state to complete: " + this.status);
+        }
+    
+        return new Job(
+                this.id,
+                this.inputFileUri,
+                this.sliceIntervalSeconds,
+                JobStatus.COMPLETE,
+                outputFileUri,
+                this.errorMessage,
+                this.startTime,
+                endTime,
+                this.userId
+        );
+    }
 }

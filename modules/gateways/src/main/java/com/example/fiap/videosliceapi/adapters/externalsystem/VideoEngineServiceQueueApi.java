@@ -9,7 +9,6 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.*;
 
-import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 
@@ -92,7 +91,7 @@ public class VideoEngineServiceQueueApi implements AutoCloseable {
                 .toList();
     }
 
-    public void deleteMessagesQueueConfirmacao(MessageSummary message) {
+    public void deleteMessagesResponseQueue(MessageSummary message) {
         DeleteMessageRequest deleteMessageRequest = DeleteMessageRequest.builder()
                 .queueUrl(videoProcessResponseQueueUrl)
                 .receiptHandle(message.receipt)

@@ -9,8 +9,6 @@ public record JobDto(
         int sliceIntervalSeconds,
 
         String status,
-        int progressCurrent,
-        int progressTotal,
 
         String outputFileUri,
         String errorMessage,
@@ -27,8 +25,6 @@ public record JobDto(
                 job.inputFileUri(),
                 job.sliceIntervalSeconds(),
                 job.status().toString(),
-                job.progress() != null ? job.progress().current() : 0,
-                job.progress() != null ? job.progress().total() : 0,
                 job.outputFileUri(),
                 job.errorMessage(),
                 job.startTime().toString(),
