@@ -1,0 +1,23 @@
+GET {{url}}/jobs
+Authorization: Dummy User1
+#Authorization: Bearer {{realAuthToken}}
+
+###
+POST {{url}}/jobs
+Content-Type: multipart/form-data; boundary=boundary
+Authorization: Dummy User1
+#Authorization: Bearer {{realAuthToken}}
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="sample-video.mp4"
+Content-Type: video/mp4
+
+< ./sample-video.mp4
+
+--boundary
+Content-Disposition: form-data; name="sliceIntervalSeconds"
+
+2
+
+--boundary--
+

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.example.fiap-videoslice</groupId>
+        <artifactId>svc-web-api-parent</artifactId>
+        <version>${projectVersion}</version>
+	<relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>svc-web-api-webapi</artifactId>
+    <version>${project.parent.version}</version>
+
+    <name>svc-web-api-webapi</name>
+    <description>FIAP VideoSlice - WebApi Microservice backend app</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>svc-web-api-usecases</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>svc-web-api-gateways</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.12.6</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId> <!-- or jjwt-gson if Gson is preferred -->
+            <version>0.12.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.5.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.skyscreamer</groupId>
+            <artifactId>jsonassert</artifactId>
+            <version>1.5.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <version>4.12.0</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <!-- Import dependency management from Spring Boot -->
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${deps.spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <skip>false</skip>
+                    <mainClass>com.example.fiap.videosliceapi.VideoSliceApiApplication</mainClass>
+
+                    <jvmArguments>-agentlib:jdwp=transport=dt_socket,server=y,address=8009,suspend=n</jvmArguments>
+
+                    <environmentVariables>
+                        <videosliceapi.auth.development-dummy-tokens.enabled>true</videosliceapi.auth.development-dummy-tokens.enabled>
+
+                        <videosliceapi.datasource.dbUrl>jdbc:postgresql://localhost/fiap_videoslice?autoReconnect=true</videosliceapi.datasource.dbUrl>
+                        <videosliceapi.datasource.dbUser>videoslice_user</videosliceapi.datasource.dbUser>
+                        <videosliceapi.datasource.dbPass>Slice!</videosliceapi.datasource.dbPass>
+
+                        <videosliceapi.integration.aws.region>us-east-1</videosliceapi.integration.aws.region>
+                        <videosliceapi.integration.cognito.userPoolId>us-east-1_222222222</videosliceapi.integration.cognito.userPoolId>
+                        <videosliceapi.integration.cognito.clientId>9999999999</videosliceapi.integration.cognito.clientId>
+                        <videosliceapi.integration.cognito.clientSecret>9999999999999999999999999999999999</videosliceapi.integration.cognito.clientSecret>
+
+                        <videosliceapi.integration.aws.overrideAwsEndpoint>http://localhost:4566</videosliceapi.integration.aws.overrideAwsEndpoint>
+
+                        <videosliceapi.integration.sqs.videoProcessRequestQueueName>videoslice_job_requests</videosliceapi.integration.sqs.videoProcessRequestQueueName>
+                        <videosliceapi.integration.sqs.videoProcessResponseQueueName>videoslice_job_status</videosliceapi.integration.sqs.videoProcessResponseQueueName>
+
+                        <videosliceapi.integration.s3.videoProcessRequestBucketName>videoslice-job-requests</videosliceapi.integration.s3.videoProcessRequestBucketName>
+                        <videosliceapi.integration.s3.videoProcessResultBucketName>videoslice-job-results</videosliceapi.integration.s3.videoProcessResultBucketName>
+                    </environmentVariables>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <mainClass>com.example.fiap.videosliceapi.VideoSliceApiApplication</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
