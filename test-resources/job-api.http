@@ -1,10 +1,12 @@
 GET {{url}}/jobs
-IdentityToken: User1
+Authorization: Dummy User1
+#Authorization: Bearer {{realAuthToken}}
 
 ###
 POST {{url}}/jobs
 Content-Type: multipart/form-data; boundary=boundary
-IdentityToken: User1
+Authorization: Dummy User1
+#Authorization: Bearer {{realAuthToken}}
 
 --boundary
 Content-Disposition: form-data; name="file"; filename="sample-video.mp4"

@@ -17,19 +17,24 @@ import org.springframework.http.HttpHeaders;
 public class DummyTokenParser implements LoggedUserTokenParser {
     public static final String ENABLE_DUMMY_TOKENS_ENV_KEY = "videosliceapi.auth.development-dummy-tokens.enabled";
 
-    public static final String HEADER_NAME = "IdentityToken";
-    private static final String HEADER_NAME_LOWER = "identitytoken";
+    private static final String HEADER_NAME = "Authorization";
 
     @Override
     public @NotNull LoggedUser verifyLoggedUser(HttpHeaders headers) {
-        String identityToken = headers.getFirst(HEADER_NAME);
-        if (identityToken == null)
-            identityToken = headers.getFirst(HEADER_NAME_LOWER);
+        String header = headers.getFirst(HEADER_NAME);
 
-        if (identityToken == null) {
+        if (header == null) {
             return new DummyUser(false, null, null, null, null, null,
-                    "IdentityToken is missing. Check DummyTokenParser for valid values");
+                    HEADER_NAME + " header is missing");
         }
+
+        String[] parts = header.split(" ");
+        if (parts.length != 2 || !parts[0].equalsIgnoreCase("Dummy")) {
+            return new DummyUser(false, null, null, null, null, null,
+                    HEADER_NAME + " token has invalid format. Authorization: Dummy User1|User2|Admin");
+        }
+
+        String identityToken = parts[1];
 
         if (identityToken.equals("User1")) {
             return new DummyUser(true, "Test-User-1", "Test User 1", "user1@fiap.example.com", UserGroup.User, identityToken, null);
@@ -39,7 +44,7 @@ public class DummyTokenParser implements LoggedUserTokenParser {
             return new DummyUser(true, "Test-User-Admin-1", "Test Admin", "admin@fiap.example.com", UserGroup.Admin, identityToken, null);
         } else {
             return new DummyUser(false, null, null, null, null, identityToken,
-                    "Invalid IdentityToken: " + identityToken + ". Check DummyTokenParser for valid values");
+                    HEADER_NAME + " token is invalid. Authorization: Dummy User1|User2|Admin");
         }
     }
 
@@ -48,7 +53,7 @@ public class DummyTokenParser implements LoggedUserTokenParser {
                             String name,
                             String email,
                             UserGroup group,
-                            String identityToken,
+                            String idToken,
                             String authError)
             implements LoggedUser {
 

@@ -20,13 +20,13 @@ class DummyTokenParserTest {
         HttpHeaders headers = new HttpHeaders();
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
         assertThat(loggedUser.authenticated()).isFalse();
-        assertThat(loggedUser.authError()).isEqualTo("IdentityToken is missing. Check DummyTokenParser for valid values");
+        assertThat(loggedUser.authError()).isEqualTo("Authorization header is missing");
     }
 
     @Test
     void verifyLoggedUser_validTokenUser1() {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("IdentityToken", "User1");
+        headers.add("Authorization", "Dummy User1");
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isTrue();
@@ -34,14 +34,14 @@ class DummyTokenParserTest {
         assertThat(loggedUser.getName()).isEqualTo("Test User 1");
         assertThat(loggedUser.getEmail()).isEqualTo("user1@fiap.example.com");
         assertThat(loggedUser.getGroup()).isEqualTo(UserGroup.User);
-        assertThat(loggedUser.identityToken()).isEqualTo("User1");
+        assertThat(loggedUser.idToken()).isEqualTo("User1");
         assertThat(loggedUser.authError()).isNull();
     }
 
     @Test
     void verifyLoggedUser_validTokenUser2() {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("IdentityToken", "User2");
+        headers.add("Authorization", "Dummy User2");
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isTrue();
@@ -49,14 +49,14 @@ class DummyTokenParserTest {
         assertThat(loggedUser.getName()).isEqualTo("Test User 2");
         assertThat(loggedUser.getEmail()).isEqualTo("user2@fiap.example.com");
         assertThat(loggedUser.getGroup()).isEqualTo(UserGroup.User);
-        assertThat(loggedUser.identityToken()).isEqualTo("User2");
+        assertThat(loggedUser.idToken()).isEqualTo("User2");
         assertThat(loggedUser.authError()).isNull();
     }
 
     @Test
     void verifyLoggedUser_validTokenAdmin() {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("IdentityToken", "Admin");
+        headers.add("Authorization", "Dummy Admin");
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isTrue();
@@ -64,28 +64,42 @@ class DummyTokenParserTest {
         assertThat(loggedUser.getName()).isEqualTo("Test Admin");
         assertThat(loggedUser.getEmail()).isEqualTo("admin@fiap.example.com");
         assertThat(loggedUser.getGroup()).isEqualTo(UserGroup.Admin);
-        assertThat(loggedUser.identityToken()).isEqualTo("Admin");
+        assertThat(loggedUser.idToken()).isEqualTo("Admin");
         assertThat(loggedUser.authError()).isNull();
     }
 
     @Test
-    void verifyLoggedUser_invalidToken() {
+    void verifyLoggedUser_invalidTokenFormat() {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("IdentityToken", "InvalidToken");
+        headers.add("Authorization", "InvalidToken");
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isFalse();
         assertThat(loggedUser.getName()).isNull();
         assertThat(loggedUser.getEmail()).isNull();
         assertThat(loggedUser.getGroup()).isNull();
-        assertThat(loggedUser.identityToken()).isEqualTo("InvalidToken");
-        assertThat(loggedUser.authError()).isEqualTo("Invalid IdentityToken: InvalidToken. Check DummyTokenParser for valid values");
+        assertThat(loggedUser.idToken()).isNull();
+        assertThat(loggedUser.authError()).isEqualTo("Authorization token has invalid format. Authorization: Dummy User1|User2|Admin");
+    }
+
+    @Test
+    void verifyLoggedUser_invalidTokenValue() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Dummy InvalidIdentification");
+        LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
+
+        assertThat(loggedUser.authenticated()).isFalse();
+        assertThat(loggedUser.getName()).isNull();
+        assertThat(loggedUser.getEmail()).isNull();
+        assertThat(loggedUser.getGroup()).isNull();
+        assertThat(loggedUser.idToken()).isEqualTo("InvalidIdentification");
+        assertThat(loggedUser.authError()).isEqualTo("Authorization token is invalid. Authorization: Dummy User1|User2|Admin");
     }
 
     @Test
     void verifyLoggedUser_lowerCaseHeaderName() {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("identitytoken", "User1");
+        headers.add("authorization", "Dummy User1");
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isTrue();
@@ -93,7 +107,7 @@ class DummyTokenParserTest {
         assertThat(loggedUser.getName()).isEqualTo("Test User 1");
         assertThat(loggedUser.getEmail()).isEqualTo("user1@fiap.example.com");
         assertThat(loggedUser.getGroup()).isEqualTo(UserGroup.User);
-        assertThat(loggedUser.identityToken()).isEqualTo("User1");
+        assertThat(loggedUser.idToken()).isEqualTo("User1");
         assertThat(loggedUser.authError()).isNull();
     }
 }

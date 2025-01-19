@@ -1,5 +1,7 @@
 playground/
 
+test-resources/http-client.private.env.json
+
 target/
 !**/src/main/**/target/
 !**/src/test/**/target/

@@ -1,6 +1,7 @@
 package com.example.fiap.videosliceapi.adapters.auth;
 
 import io.jsonwebtoken.Clock;
+import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -30,79 +31,99 @@ class DefaultUserTokenParserTest {
 
     @Test
     void verifyLoggedUser_headerNotPresent() {
-        var usuario = parser.verifyLoggedUser(new HttpHeaders());
-        assertThat(usuario.authenticated()).isFalse();
+        var user = parser.verifyLoggedUser(new HttpHeaders());
 
-        assertThrows(IllegalStateException.class, usuario::getName);
-        assertThrows(IllegalStateException.class, usuario::getEmail);
-        assertThrows(IllegalStateException.class, usuario::getGroup);
-        assertThrows(IllegalStateException.class, usuario::identityToken);
+        assertThat(user.authError()).isEqualTo("Authorization header is missing");
+        assertThat(user.authenticated()).isFalse();
 
-        assertThat(usuario.authError()).isEqualTo("IdentityToken is missing");
+        assertThrows(IllegalStateException.class, user::getName);
+        assertThrows(IllegalStateException.class, user::getEmail);
+        assertThrows(IllegalStateException.class, user::getGroup);
+        assertThrows(IllegalStateException.class, user::idToken);
+    }
+
+    @Test
+    void verifyLoggedUser_headerInvalidFormat() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.put("Authorization", List.of("Not a valid Bearer token"));
+
+        var user = parser.verifyLoggedUser(headers);
+
+        assertThat(user.authError()).isEqualTo("Authorization header is invalid");
+        assertThat(user.authenticated()).isFalse();
+
+        assertThrows(IllegalStateException.class, user::getName);
+        assertThrows(IllegalStateException.class, user::getEmail);
+        assertThrows(IllegalStateException.class, user::getGroup);
+        assertThrows(IllegalStateException.class, user::idToken);
     }
 
     @Test
     void verifyLoggedUser_ok() {
         when(cognitoJwksApi.getKnownSignaturesJson()).thenReturn(EXAMPLE_SIGNATURES_JSON);
 
-        when(expirationCheckClock.now()).thenReturn(new Date(1725131899000L)); // Fixed time before the expiration of the example token
+        when(expirationCheckClock.now()).thenReturn(new Date(1737321360000L)); // Fixed time before the expiration of the example token
 
-        String token = "eyJraWQiOiIzXC9EQk5VQThYZWgzdTRFRnN6XC9JNlJOdTlZNkkyUGZqT2FFUTBkMlRXRWc9IiwiYWxnIjoiUlMyNTYifQ" +
-                       ".eyJzdWIiOiI5NDU4YzQ2OC1iMDIxLTcwYzgtOWVhYy0xMzRhZDg5YmJmYTIiLCJjb2duaXRvOmdyb3VwcyI6WyJDbGllbnRlQ2FkYXN0cmFkbyJdLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV85NldGY3dCOEUiLCJjb2duaXRvOnVzZXJuYW1lIjoiOTQ1OGM0NjgtYjAyMS03MGM4LTllYWMtMTM0YWQ4OWJiZmEyIiwib3JpZ2luX2p0aSI6ImRjODI1NDI4LTI1NDktNGNjOC05MDg0LWFhM2I4NTNmNmFmNiIsImF1ZCI6IjZ2Y2" +
-                       "tqb3ZybjF1dGFsaDJpZXJzOXExNGNhIiwiZXZlbnRfaWQiOiIxOWJmY2I2NC0xOGUyLTQ4NjEtYmI4ZS1iYTlmYWQ4YzIzZDkiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTcyNTEzMTY2OCwibmFtZSI6IkR1ZHVIYW1idXJnZXIiLCJleHAiOjE3MjUxMzUyNjgsImN1c3RvbTpjcGYiOiIxMjMzMjExMjM0MCIsImlhdCI6MTcyNTEzMTY2OCwianRpIjoiZjc4MjhmNmMtY2U2NS00MWQyLTg5NWYtZTBhMzg0OWM5MTI2IiwiZW1haWwiOiJkdWR1QGV4YW1wbGUuY29tIn0" +
-                       ".sx3DrKFZkIl94mAGfmjKEUTtJYOrANK4U-qZPFvkshx8BmjmFupUitP8Is6ciI7R0fsZyFXt2qJQAyl5pNT_qu9vdUYcGoHxIUxlfCwAveD609SAbGFq7bcvOZ90ulsvypwLJPVJkBgsBDoT_vcisa7GpS19hh0xZWPIVEDzENLZCbaSQo0dcr3Vq03io4bNAOASUBzVoiWzz5BKIY50G0xw6WZIix0uwsI1GewJGU3eqchDWWAbDRD8ZfbHjy8HiD-haLTnj_Xq1ZIIUThx_95L_ltUXIJZC0rXqjZOdE-ero04obQF92sqM62P1xZKxxEBi7ETuQvC4vHmgnd_Fw";
+        String token = "eyJraWQiOiJsWndMV01CQ0tNbTFKYTR1VVFSZXJHZ05CdkNWaVpITkplbnZJNVlydVljPSIsImFsZyI6IlJTMjU2In0" +
+                       ".eyJzdWIiOiJiNGU4YjRjOC1iMGUxLTcwOTctZDgwZi00NjI1NmU5ZjgxODkiLCJjb2duaXRvOmdyb3VwcyI6WyJVc2VyIl0sImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX1dPenNQZjlIOSIsImNvZ25pdG86dXNlcm5hbWUiOiJiN" +
+                       "GU4YjRjOC1iMGUxLTcwOTctZDgwZi00NjI1NmU5ZjgxODkiLCJvcmlnaW5fanRpIjoiYTQ2ODIyZDItYzU0MC00MDkxLWJjYzItMTIwNDNlOTdlYjA2IiwiYXVkIjoiNjN1dXVlcWphODNudTFrc3QzcTQxaW5wcGkiLCJldmVudF9pZCI6IjllMjJkZDExLWVkOTctNDZhOS04ZTg1LTk2OTc3NGU1YWU1" +
+                       "ZSIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzM3MzIxMDgxLCJuYW1lIjoiUmVndWxhciBVc2VyIiwiZXhwIjoxNzM3MzI0NjgxLCJpYXQiOjE3MzczMjEwODEsImp0aSI6ImI2MTBjNjI1LTUyNWEtNDA0Ny1iMTZmLTBjYTU3MjIzOTQ2OSIsImVtYWlsIjoidmlkZW9zbGljZXVzZXJAZmlhcC5leGFtcGxlLmNvbSJ9" +
+                       ".S3M-8P4GCbx-eiSi1taP3-oW4d6qEYxVeHCHyWT3dhoMhAl26zPQ7eedH4khUvjNeTPC5yqb3WyiKmqkAFfmLsnY22_onJJ6doSkCSakPI8_pRmr9Bu3yos1PthPlVLYCiIhn3k4JjqUWQuj-7u5qZlKtTT5jjB9M2fNHI7rhqDAgTBPFCCRG7H5-FZ3ZTFtb6XxRNXu1RbY-0119eaSxwvtyq1JEB5qKxoyr3wsOzYI8Ucy1gvhFYFFzDscrnYgn2IF3X-g2TDGLsNN8jHzRNQp4gq40CLsWk4iFQqeqa7I-in2SmGtSyDSwPPNpJefST0tbfwzAzaBPbso3OHLVw";
 
         HttpHeaders headers = new HttpHeaders();
-        headers.put(DefaultUserTokenParser.HEADER_NAME, List.of(token));
+        headers.put("Authorization", List.of("Bearer " + token));
 
-        var usuario = parser.verifyLoggedUser(headers);
+        var user = parser.verifyLoggedUser(headers);
 
-        assertThat(usuario.authenticated()).isTrue();
-        assertThat(usuario.getUserId()).isEqualTo("9458c468-b021-70c8-9eac-134ad89bbfa2");
-        assertThat(usuario.getName()).isEqualTo("DuduHamburger");
-        assertThat(usuario.getEmail()).isEqualTo("dudu@example.com");
-//        assertThat(usuario.getGroup()).isEqualTo(UserGroup.User);
-        assertThat(usuario.identityToken()).isEqualTo(token);
-        assertThat(usuario.authError()).isNull();
+        assertThat(user.authError()).isNull();
+        assertThat(user.authenticated()).isTrue();
+        assertThat(user.getUserId()).isEqualTo("b4e8b4c8-b0e1-7097-d80f-46256e9f8189");
+        assertThat(user.getName()).isEqualTo("Regular User");
+        assertThat(user.getEmail()).isEqualTo("videosliceuser@fiap.example.com");
+        assertThat(user.getGroup()).isEqualTo(UserGroup.User);
+        assertThat(user.idToken()).isEqualTo(token);
     }
 
     @Test
     void verifyLoggedUser_assinaturaTokenInvalida() {
         when(cognitoJwksApi.getKnownSignaturesJson()).thenReturn(EXAMPLE_SIGNATURES_JSON);
 
-        when(expirationCheckClock.now()).thenReturn(new Date(1725131899000L)); // Fixed time before the expiration of the example token
+        when(expirationCheckClock.now()).thenReturn(new Date(1737321360000L)); // Fixed time before the expiration of the example token
+
+        // Token alterado com uma assinatura incorreta
+        String token = "eyJraWQiOiJsWndMV01CQ0tNbTFKYTR1VVFSZXJHZ05CdkNWaVpITkplbnZJNVlydVljPSIsImFsZyI6IlJTMjU2In0" +
+                       ".eyJzdWIiOiJiNGU4YjRjOC1iMGUxLTcwOTctZDgwZi00NjI1NmU5ZjgxODkiLCJjb2duaXRvOmdyb3VwcyI6WyJVc2VyIl0sImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX1dPenNQZjlIOSIsImNvZ25pdG86dXNlcm5hbWUiOiJiN" +
+                       "GU4YjRjOC1iMGUxLTcwOTctZDgwZi00NjI1NmU5ZjgxODkiLCJvcmlnaW5fanRpIjoiYTQ2ODIyZDItYzU0MC00MDkxLWJjYzItMTIwNDNlOTdlYjA2IiwiYXVkIjoiNjN1dXVlcWphODNudTFrc3QzcTQxaW5wcGkiLCJldmVudF9pZCI6IjllMjJkZDExLWVkOTctNDZhOS04ZTg1LTk2OTc3NGU1YWU1" +
+                       "ZSIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzM3MzIxMDgxLCJuYW1lIjoiUmVndWxhciBVc2VyIiwiZXhwIjoxNzM3MzI0NjgxLCJpYXQiOjE3MzczMjEwODEsImp0aSI6ImI2MTBjNjI1LTUyNWEtNDA0Ny1iMTZmLTBjYTU3MjIzOTQ2OSIsImVtYWlsIjoidmlkZW9zbGljZXVzZXJAZmlhcC5leGFtcGxlLmNvbSJ9" +
+                       ".ASSINATURAinvalidaASSINATURAinvalidaASSINATURAinvalidaASSINATURAinvalidaASSINATURAinvalida_onJJ6doSkCSakPI8_pRmr9Bu3yos1PthPlVLYCiIhn3k4JjqUWQuj-7u5qZlKtTT5jjB9M2fNHI7rhqDAgTBPFCCRG7H5-FZ3ZTFtb6XxRNXu1RbY-0119eaSxwvtyq1JEB5qKxoyr3wsOzYI8Ucy1gvhFYFFzDscrnYgn2IF3X-g2TDGLsNN8jHzRNQp4gq40CLsWk4iFQqeqa7I-in2SmGtSyDSwPPNpJefST0tbfwzAzaBPbso3OHLVw";
 
         HttpHeaders headers = new HttpHeaders();
-        headers.put(DefaultUserTokenParser.HEADER_NAME, List.of( // Token alterado com uma assinatura incorreta
-                "eyJraWQiOiIzXC9EQk5VQThYZWgzdTRFRnN6XC9JNlJOdTlZNkkyUGZqT2FFUTBkMlRXRWc9IiwiYWxnIjoiUlMyNTYifQ" +
-                ".eyJzdWIiOiI5NDU4YzQ2OC1iMDIxLTcwYzgtOWVhYy0xMzRhZDg5YmJmYTIiLCJjb2duaXRvOmdyb3VwcyI6WyJDbGllbnRlQ2FkYXN0cmFkbyJdLCJpc3MiOiJodHRwczpcL1wvY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb21cL3VzLWVhc3QtMV85NldGY3dCOEUiLCJjb2duaXRvOnVzZXJuYW1lIjoiOTQ1OGM0NjgtYjAyMS03MGM4LTllYWMtMTM0YWQ4OWJiZmEyIiwib3JpZ2luX2p0aSI6ImRjODI1NDI4LTI1NDktNGNjOC05MDg0LWFhM2I4NTNmNmFmNiIsImF1ZCI6IjZ2Y2" +
-                "tqb3ZybjF1dGFsaDJpZXJzOXExNGNhIiwiZXZlbnRfaWQiOiIxOWJmY2I2NC0xOGUyLTQ4NjEtYmI4ZS1iYTlmYWQ4YzIzZDkiLCJ0b2tlbl91c2UiOiJpZCIsImF1dGhfdGltZSI6MTcyNTEzMTY2OCwibmFtZSI6IkR1ZHVIYW1idXJnZXIiLCJleHAiOjE3MjUxMzUyNjgsImN1c3RvbTpjcGYiOiIxMjMzMjExMjM0MCIsImlhdCI6MTcyNTEzMTY2OCwianRpIjoiZjc4MjhmNmMtY2U2NS00MWQyLTg5NWYtZTBhMzg0OWM5MTI2IiwiZW1haWwiOiJkdWR1QGV4YW1wbGUuY29tIn0" +
-                ".ASSINATURAinvalidaASSINATURAinvalidaASSINATURAinvalidaASSINATURAinvalidaASSINATURAinvalidaYcGoHxIUxlfCwAveD609SAbGFq7bcvOZ90ulsvypwLJPVJkBgsBDoT_vcisa7GpS19hh0xZWPIVEDzENLZCbaSQo0dcr3Vq03io4bNAOASUBzVoiWzz5BKIY50G0xw6WZIix0uwsI1GewJGU3eqchDWWAbDRD8ZfbHjy8HiD-haLTnj_Xq1ZIIUThx_95L_ltUXIJZC0rXqjZOdE-ero04obQF92sqM62P1xZKxxEBi7ETuQvC4vHmgnd_Fw"
-        ));
+        headers.put("authorization", List.of("bearer " + token));
 
-        var usuario = parser.verifyLoggedUser(headers);
+        var user = parser.verifyLoggedUser(headers);
 
-        assertThat(usuario.authenticated()).isFalse();
-        assertThat(usuario.authError()).startsWith("Erro ao validar IdentityToken: JWT signature does not match locally computed signature");
+        assertThat(user.authError()).startsWith("Erro ao validar IdToken: JWT signature does not match locally computed signature");
+        assertThat(user.authenticated()).isFalse();
     }
 
+    @Language("JSON")
     private static final String EXAMPLE_SIGNATURES_JSON = """
             {
               "keys": [
                 {
                   "alg": "RS256",
                   "e": "AQAB",
-                  "kid": "3/DBNUA8Xeh3u4EFsz/I6RNu9Y6I2PfjOaEQ0d2TWEg=",
+                  "kid": "lZwLWMBCKMm1Ja4uUQRerGgNBvCViZHNJenvI5YruYc=",
                   "kty": "RSA",
-                  "n": "tuz4IHRCUfCYkRC3h9fxGXkufLwKm14KAYtu-tvQ0B1ifsGxIpXWXEGhvXxN65gxc2KENgwqK8BZ9zKRKxRLUly9O-6-eX9mHTgtKiB94wMCkEc83fYSlZ6IEQ7fdjJZJP8lTHx3Q4dOkytrKZ804nvlT_69L46Y_387zAdKs8bOT_3LcK7gN3E5pTMlKNJAUaPyptu8hoGZfk1KmxigrLGNn5OZ3MwHncScFrhxzy4Nd-bpGsSSwZdL6MWxykdsLKqVRWqgpyQQoWEEIVRzdzGyli7951tBaptmu95jdXh-4LRH_z0_mdRe2allzfD-e5rR6FnQrHyA8LvOKkcYaQ",
+                  "n": "n6xMDre03muqInire2cIcjre4B1YQFKIscKUcdVWGJqFmjpjl4OTSQ3O9Veyx3hE7dzD0iBgs78TnL1iXufnNFywo_Ci79SCqyv108u7Drb9i8pFMyHhKpFsai6YpRRlcXIU02HobW9p6EOeEjZkQCivKpfdYaReLw2vadG9MYk4OsJl9Nj7JBs9uDfbTP3deGJRVpZbv6my7MzHVhNYwml-RgJaSe0qjP4kfUkCNQCH3xUXupHao7tzkNLO0tY9ecPB4GkLB9EYhmqOKojIeLHSfvhRpkLZDxf8HpiLI1YaKzm8FxVFgPmyv2CGrdB9yEpRQCH_vBWeJ8ZAGrjV8Q",
                   "use": "sig"
                 },
                 {
                   "alg": "RS256",
                   "e": "AQAB",
-                  "kid": "J6PLlzgv3tK7ePZrTiq7Flr32X8xxTLz/TKNO6wRBHA=",
+                  "kid": "9/3QmJRENNVmnsgHSLY8KzeGv/N14uMNo6Q40NQ4BuQ=",
                   "kty": "RSA",
-                  "n": "o3s6gv5YkvaieTjbpd_5MPjSNH6ABCTKqKt6lz5lQl5k6ufpqGVsHC5_rgraKYymgQNFfvRJRSc2JBdmBOTpAilcXztr8T9ngjfrGD2GfHC8RfJPIgKVArRrmCgy9wVB9v2yA4a9lMAAJUNClEvEmTyyoi2ji8nmBx0nLdwrJH-mk1-UQnJG_eFfHYpeuf2uCmyWFCXQ1nt7JwJ-aB-YD0MHrwz5miY00Q6uw0bW7oI4jUSHppFQlRJm8ynqFBW_FJLc4ZU70NjDH_qnK1nAkQt7Y2oMp0KokOI68C7vljkXu2dhInXGldU4IM24c-9BCBB2PwzhCgTjzI7-OvyxjQ",
+                  "n": "wE_Ko75PU1iWKI54K8IvtuFa_RGkvcsXdOxTUZ7rwLa0z4QM_axbT8a3LnATBSVQZgVAqa1b73RugvwTagUptKirbxorSgL2r0gNaJyd7_cR408mV9bh0IdcH2L1_uRENXYH1ourBuQFSteIrKFDZgbDsS3g3yEn5sMEwtyM_Qsm--5i0-YWL4SyhLUAyfgAjcZhNepWMUQIpQcxtNpzlINNM-R_-qn9MzZqWzwtVFN6Dth2UtVBJR-ealHkwgXmxB65NFCfjHvM6zGibURxDacRn9xMQKgWdC91y-2qhS_LYz9NepPFx5H7SBOll80PX4G6y3IxhYo2x_keo8qPTQ",
                   "use": "sig"
                 }
               ]

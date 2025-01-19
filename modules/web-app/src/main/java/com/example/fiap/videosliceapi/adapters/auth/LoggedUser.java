@@ -14,7 +14,7 @@ public interface LoggedUser {
 
     UserGroup getGroup();
 
-    String identityToken();
+    String idToken();
 
     String authError();
 }

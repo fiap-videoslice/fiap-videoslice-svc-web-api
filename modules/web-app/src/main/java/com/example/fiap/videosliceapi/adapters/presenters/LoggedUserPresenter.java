@@ -10,7 +10,7 @@ public class LoggedUserPresenter {
                 "nome", usuarioLogado.getName(),
                 "email", usuarioLogado.getEmail(),
                 "grupo", usuarioLogado.getGroup() != null ? usuarioLogado.getGroup().name() : "",
-                "token", usuarioLogado.identityToken()
+                "token", usuarioLogado.idToken()
         );
     }
 }

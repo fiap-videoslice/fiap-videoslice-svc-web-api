@@ -11,7 +11,7 @@ public class LoggedUserCheck {
     public static LoggedUser ensureLoggedUser(LoggedUserTokenParser loggedUserTokenParser, HttpHeaders headers) throws NotAuthenticatedException {
         LoggedUser user = loggedUserTokenParser.verifyLoggedUser(headers);
         if (!user.authenticated())
-            throw new NotAuthenticatedException("User is not authenticated");
+            throw new NotAuthenticatedException("User is not authenticated. " + user.authError());
 
         return user;
     }
