@@ -65,9 +65,8 @@ public class S3MediaStorageIT {
 
         try (S3Client s3Client = createTestClient()) {
 
-            // Expected file name: inputs/video-2e08ad6d-1c29-4d50-950e-7b7011c9f484.mp4
             ResponseBytes<GetObjectResponse> actualSaved = s3Client.getObjectAsBytes(builder -> builder.bucket(REQUESTS_BUCKET)
-                    .key("inputs/video-2e08ad6d-1c29-4d50-950e-7b7011c9f484.mp4"));
+                    .key("input-video-2e08ad6d-1c29-4d50-950e-7b7011c9f484.mp4"));
 
             assertThat(actualSaved.asByteArray()).containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
         }
@@ -85,9 +84,8 @@ public class S3MediaStorageIT {
         byte[] saved;
 
         try (S3Client s3Client = createTestClient()) {
-            // Expected file name: inputs/video-2e08ad6d-1c29-4d50-950e-7b7011c9f484.mp4
             ResponseBytes<GetObjectResponse> actualSaved = s3Client.getObjectAsBytes(builder -> builder.bucket(REQUESTS_BUCKET)
-                    .key("inputs/video-123e4567-e89b-12d3-a456-426614174000.mp4"));
+                    .key("input-video-123e4567-e89b-12d3-a456-426614174000.mp4"));
 
             saved = actualSaved.asByteArray();
         }

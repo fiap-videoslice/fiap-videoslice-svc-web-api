@@ -40,7 +40,7 @@ public class S3MediaStorage implements MediaStorage, AutoCloseable {
 
     @Override
     public String saveInputVideo(UUID uuid, byte[] videoBytes) {
-        String fileName = "inputs/video-" + uuid + ".mp4";
+        String fileName = "input-video-" + uuid + ".mp4";
 
         LOGGER.info("Saving file {} with {} bytes to bucket {}", fileName, videoBytes.length, requestBucketName);
 
