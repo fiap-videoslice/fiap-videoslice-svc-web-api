@@ -1,5 +1,7 @@
 package com.example.fiap.videosliceapi.jobs;
 
+import com.example.fiap.videosliceapi.adapters.datasource.TransactionManager;
+import com.example.fiap.videosliceapi.adapters.testUtils.DummyTransactionManager;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
@@ -24,11 +26,15 @@ public class EngineResponseReceiverTaskTest {
     @Mock
     private JobUseCases jobUseCases;
 
+    private TransactionManager transactionManager;
+
     private EngineResponseReceiverTask engineResponseReceiverTask;
 
     @BeforeEach
     void setUp() {
-        engineResponseReceiverTask = new EngineResponseReceiverTask(videoEngineService, jobUseCases);
+        transactionManager = new DummyTransactionManager();
+
+        engineResponseReceiverTask = new EngineResponseReceiverTask(videoEngineService, jobUseCases, transactionManager);
     }
 
     @Test

@@ -17,11 +17,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.IOException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class JobUseCasesTest {
@@ -62,6 +63,38 @@ class JobUseCasesTest {
 
         verify(jobRepository).saveNewJob(expectedNewJob);
         verify(videoEngineService).startProcess(expectedNewJob);
+    }
+
+    @Test
+    void createNewJob_shouldRollbackStorageOnRepositoryException() {
+        when(clock.now()).thenReturn(TestConstants.INSTANT_1);
+        when(idGenerator.newId()).thenReturn(TestConstants.ID_1);
+        when(mediaStorage.saveInputVideo(TestConstants.ID_1, TestConstants.VIDEO_BYTES)).thenReturn("/input/video_abcXyz.mp4");
+
+        doThrow(new RuntimeException("Database error")).when(jobRepository).saveNewJob(any(Job.class));
+
+        CreateJobParam param = new CreateJobParam(TestConstants.VIDEO_BYTES, 10);
+
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> jobUseCases.createNewJob(param, "User_123_456"));
+
+        assertThat(exception.getMessage()).isEqualTo("Database error");
+        verify(mediaStorage).removeInputVideo(TestConstants.ID_1);
+    }
+
+    @Test
+    void createNewJob_shouldRollbackStorageOnVideoEngineError() throws IOException {
+        when(clock.now()).thenReturn(TestConstants.INSTANT_1);
+        when(idGenerator.newId()).thenReturn(TestConstants.ID_1);
+        when(mediaStorage.saveInputVideo(TestConstants.ID_1, TestConstants.VIDEO_BYTES)).thenReturn("/input/video_abcXyz.mp4");
+
+        doThrow(new RuntimeException("Video engine unreachable")).when(videoEngineService).startProcess(any(Job.class));
+
+        CreateJobParam param = new CreateJobParam(TestConstants.VIDEO_BYTES, 10);
+
+        RuntimeException exception = Assertions.assertThrows(RuntimeException.class, () -> jobUseCases.createNewJob(param, "User_123_456"));
+
+        assertThat(exception.getMessage()).contains("Video engine unreachable");
+        verify(mediaStorage).removeInputVideo(TestConstants.ID_1);
     }
 
     @Test
@@ -152,6 +185,11 @@ class JobUseCasesTest {
         Job expectedJob = job.errorProcessing("Processing error", TestConstants.INSTANT_2);
 
         verify(jobRepository).updateMutableAttributes(expectedJob);
+
+        /*
+        SAGA demonstration of an 'undo' operation. When the video engine returns a failure we remove the input file
+         */
+        verify(mediaStorage).removeInputVideo(TestConstants.ID_1);
     }
 
     @Test

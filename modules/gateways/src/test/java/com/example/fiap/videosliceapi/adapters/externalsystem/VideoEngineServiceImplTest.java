@@ -1,6 +1,7 @@
 package com.example.fiap.videosliceapi.adapters.externalsystem;
 
 import com.example.fiap.videosliceapi.domain.entities.Job;
+import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 import org.intellij.lang.annotations.Language;
@@ -17,7 +18,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -64,7 +64,7 @@ public class VideoEngineServiceImplTest {
     }
 
     @Test
-    void receiveAvailableResponseMessages_processValidMessages() throws IOException {
+    void receiveAvailableResponseMessages_processValidMessages() throws Exception {
         var messageBody = """
                 {
                   "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -77,12 +77,12 @@ public class VideoEngineServiceImplTest {
 
         when(queueApi.receiveMessagesResponseQueue()).thenReturn(List.of(messageSummary));
 
-        Consumer<JobResponse> callback = mock();
+        VideoEngineService.ResponseCallback callback = mock();
 
         videoEngineServiceImpl.receiveAvailableResponseMessages(callback);
 
         ArgumentCaptor<JobResponse> jobResponseCaptor = ArgumentCaptor.forClass(JobResponse.class);
-        verify(callback).accept(jobResponseCaptor.capture());
+        verify(callback).consume(jobResponseCaptor.capture());
 
         JobResponse jobResponse = jobResponseCaptor.getValue();
         assertThat(jobResponse).isNotNull();
@@ -93,7 +93,7 @@ public class VideoEngineServiceImplTest {
     }
 
     @Test
-    void receiveAvailableResponseMessages_processErrorMessages() throws IOException {
+    void receiveAvailableResponseMessages_processErrorMessages() throws Exception {
         var messageBody = """
                 {
                   "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -105,12 +105,12 @@ public class VideoEngineServiceImplTest {
 
         when(queueApi.receiveMessagesResponseQueue()).thenReturn(List.of(messageSummary));
 
-        Consumer<JobResponse> callback = mock();
+        VideoEngineService.ResponseCallback callback = mock();
 
         videoEngineServiceImpl.receiveAvailableResponseMessages(callback);
 
         ArgumentCaptor<JobResponse> jobResponseCaptor = ArgumentCaptor.forClass(JobResponse.class);
-        verify(callback).accept(jobResponseCaptor.capture());
+        verify(callback).consume(jobResponseCaptor.capture());
 
         JobResponse jobResponse = jobResponseCaptor.getValue();
         assertThat(jobResponse).isNotNull();
@@ -122,7 +122,7 @@ public class VideoEngineServiceImplTest {
     }
 
     @Test
-    void receiveAvailableResponseMessages_logAndContinueOnException() throws IOException {
+    void receiveAvailableResponseMessages_logAndContinueOnException() throws Exception {
         var invalidMessageBody = """
                 !!Not_A_JSON_Message!!
                 """;
@@ -139,12 +139,12 @@ public class VideoEngineServiceImplTest {
 
         when(queueApi.receiveMessagesResponseQueue()).thenReturn(List.of(invalidMessageSummary, validMessageSummary));
 
-        Consumer<JobResponse> callback = mock();
+        VideoEngineService.ResponseCallback callback = mock();
 
         videoEngineServiceImpl.receiveAvailableResponseMessages(callback);
 
         ArgumentCaptor<JobResponse> jobResponseCaptor = ArgumentCaptor.forClass(JobResponse.class);
-        verify(callback, times(1)).accept(jobResponseCaptor.capture());
+        verify(callback, times(1)).consume(jobResponseCaptor.capture());
 
         JobResponse jobResponse = jobResponseCaptor.getValue();
         assertThat(jobResponse).isNotNull();

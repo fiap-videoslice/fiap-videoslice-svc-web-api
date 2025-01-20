@@ -1,6 +1,7 @@
 package com.example.fiap.videosliceapi.adapters.externalsystem;
 
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -9,6 +10,7 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.util.UUID;
@@ -40,7 +42,7 @@ public class S3MediaStorage implements MediaStorage, AutoCloseable {
 
     @Override
     public String saveInputVideo(UUID uuid, byte[] videoBytes) {
-        String fileName = "input-video-" + uuid + ".mp4";
+        String fileName = uuidToFileName(uuid);
 
         LOGGER.info("Saving file {} with {} bytes to bucket {}", fileName, videoBytes.length, requestBucketName);
 
@@ -56,6 +58,23 @@ public class S3MediaStorage implements MediaStorage, AutoCloseable {
         return fileName;
     }
 
+    @Override
+    public void removeInputVideo(UUID uuid) {
+        String fileName = uuidToFileName(uuid);
+
+        LOGGER.info("REMOVING file {} from bucket {}", fileName, requestBucketName);
+
+        s3Client.deleteObject(
+                DeleteObjectRequest.builder()
+                        .bucket(requestBucketName)
+                        .key(fileName)
+                        .build()
+        );
+    }
+
+    private static @NotNull String uuidToFileName(UUID uuid) {
+        return "input-video-" + uuid + ".mp4";
+    }
 
     @Override
     public void close() throws Exception {

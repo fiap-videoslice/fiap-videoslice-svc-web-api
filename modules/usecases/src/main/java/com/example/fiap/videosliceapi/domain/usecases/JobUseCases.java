@@ -9,11 +9,15 @@ import com.example.fiap.videosliceapi.domain.utils.Clock;
 import com.example.fiap.videosliceapi.domain.utils.IdGenerator;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
 
 public class JobUseCases {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JobUseCases.class);
+
     private final JobRepository jobRepository;
     private final VideoEngineService videoEngineService;
     private final MediaStorage mediaStorage;
@@ -42,11 +46,30 @@ public class JobUseCases {
         Job newJob = Job.createJob(uuid, uri, param.sliceIntervalSeconds(), clock.now(),
                 userId);
 
-        jobRepository.saveNewJob(newJob);
+        try {
+            jobRepository.saveNewJob(newJob);
+        } catch (Exception e) {
+            LOGGER.error("Error saving new job request: {}", e, e);
+
+            // Transaction control:
+            // The media storage cannot be automatically controlled by the same transaction mechanism.
+            // "Rollback" of the previous step needs to be explicitly called
+
+            mediaStorage.removeInputVideo(uuid);
+            throw e;
+        }
+
         try {
             videoEngineService.startProcess(newJob);
         } catch (Exception e) {
-            throw new RuntimeException(e);   // TODO - Change status of request
+            LOGGER.error("Error sending request to video engine: {}", e, e);
+
+            // Transaction control:
+            // Explicit "rollback" of the first step - save to video storage
+            // The second step (database save) is rolled back automatically on exception
+            mediaStorage.removeInputVideo(uuid);
+
+            throw new RuntimeException(e);
         }
 
         return newJob;
@@ -64,8 +87,15 @@ public class JobUseCases {
             updated = job.startProcessing();
         } else if (response.status() == JobStatus.COMPLETE) {
             updated = job.completeProcessing(response.outputFileUri(), clock.now());
+
         } else if (response.status() == JobStatus.FAILED) {
             updated = job.errorProcessing(response.message(), clock.now());
+
+            /*
+            SAGA demonstration of an 'undo' operation. When the video engine returns a failure we remove the input file
+             */
+            mediaStorage.removeInputVideo(job.id());
+
         } else {
             throw new RuntimeException("Invalid status for transition: " + response.status());
         }
