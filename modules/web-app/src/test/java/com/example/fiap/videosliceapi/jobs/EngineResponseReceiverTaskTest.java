@@ -43,8 +43,8 @@ public class EngineResponseReceiverTaskTest {
                 JobStatus.COMPLETE, "/outputs/frames.zip", null);
 
         doAnswer(invocation -> {
-            Consumer<JobResponse> consumer = invocation.getArgument(0);
-            consumer.accept(response);
+            VideoEngineService.ResponseCallback consumer = invocation.getArgument(0);
+            consumer.consume(response);
             return null;
         }).when(videoEngineService).receiveAvailableResponseMessages(any());
 
