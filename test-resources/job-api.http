@@ -1,3 +1,5 @@
+# ##### JOB CREATION AND QUERY APIs #################
+
 GET {{url}}/jobs
 Authorization: Dummy User1
 #Authorization: Bearer {{realAuthToken}}
@@ -20,4 +22,25 @@ Content-Disposition: form-data; name="sliceIntervalSeconds"
 2
 
 --boundary--
+
+###
+# ####### USER CREATION AND INFO APIs #########################
+GET {{url}}/users/me
+Authorization: Dummy User1
+#Authorization: Bearer {{realAuthToken}}
+
+
+###
+POST {{url}}/users
+Authorization: Dummy Admin
+#Authorization: Bearer {{realAuthToken}}
+Content-Type: application/json
+
+{
+  "name": "The New User",
+  "email": "newuser@fiap.example.com",
+  "group": "User",
+  "password": "sl1ceTh1sV1de0"
+}
+
 

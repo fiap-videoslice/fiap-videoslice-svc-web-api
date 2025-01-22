@@ -7,9 +7,9 @@ import java.util.Map;
 public class LoggedUserPresenter {
     public static Map<String, Object> toMap(LoggedUser usuarioLogado) {
         return Map.of(
-                "nome", usuarioLogado.getName(),
+                "name", usuarioLogado.getName(),
                 "email", usuarioLogado.getEmail(),
-                "grupo", usuarioLogado.getGroup() != null ? usuarioLogado.getGroup().name() : "",
+                "group", usuarioLogado.getGroup() != null ? usuarioLogado.getGroup().name() : "",
                 "token", usuarioLogado.idToken()
         );
     }

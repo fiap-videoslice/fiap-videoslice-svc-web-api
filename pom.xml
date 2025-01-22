@@ -148,9 +148,16 @@
                 <version>0.8.12</version>
                 <configuration>
                     <excludes>
-                        <!-- Exclude Spring configuration class from coverage, as the unit test does not apply to them -->
-			    <exclude>com/example/fiap/videosliceapi/VideoSliceApiApplication.*</exclude>
+                        <!-- Being very cautious on what we exclude from coverage. -->
+
+                        <!-- Spring configuration classes - they are totally tied to the framework and running env,
+                        isolated tests would not be able to verify much -->
+			            <exclude>com/example/fiap/videosliceapi/VideoSliceApiApplication.*</exclude>
                         <exclude>com/example/fiap/videosliceapi/DomainServiceBeans.*</exclude>
+
+                        <!-- Cognito integration code - completely dependent on the API, and there is not a tool for
+                         integration tests without a full environment (free localstack will not support this service) -->
+                        <exclude>com.example.fiap.videosliceapi.adapters.externalsystem.CognitoUserRegistry</exclude>
                     </excludes>
                 </configuration>
                 <executions>
