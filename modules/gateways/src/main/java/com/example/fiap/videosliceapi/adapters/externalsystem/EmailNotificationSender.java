@@ -2,6 +2,7 @@ package com.example.fiap.videosliceapi.adapters.externalsystem;
 
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.external.NotificationSender;
+import com.example.fiap.videosliceapi.domain.utils.StringUtils;
 import com.example.fiap.videosliceapi.presenters.EmailNotificationPresenter;
 import jakarta.mail.Authenticator;
 import jakarta.mail.Message;
@@ -32,50 +33,76 @@ public class EmailNotificationSender implements NotificationSender {
     public EmailNotificationSender(CognitoUserRegistry cognitoUserRegistry, Environment environment) {
         this.cognitoUserRegistry = cognitoUserRegistry;
 
-        String smtpServer = environment.getProperty("videosliceapi.integration.smtp.server");
-        String smtpPort = environment.getProperty("videosliceapi.integration.smtp.port");
-        String smtpTls = environment.getProperty("videosliceapi.integration.smtp.starttls");
+        String smtpEnabledEnv = environment.getProperty("videosliceapi.integration.smtp.enabled");
+        boolean smtpEnabled = Boolean.parseBoolean(smtpEnabledEnv);
 
-        String smtpUser = environment.getProperty("videosliceapi.integration.smtp.user");
-        String smtpPassword = environment.getProperty("videosliceapi.integration.smtp.password");
-        boolean usingAuthentication = smtpUser != null && smtpPassword != null;
+        if (smtpEnabled) {
+            String smtpServer = environment.getProperty("videosliceapi.integration.smtp.server");
+            if (StringUtils.isEmpty(smtpServer))
+                throw new IllegalStateException("videosliceapi.integration.smtp.server not set");
 
-        this.mailFrom = environment.getProperty("videosliceapi.integration.smtp.mailFrom");
+            String smtpPort = environment.getProperty("videosliceapi.integration.smtp.port");
+            if (StringUtils.isEmpty(smtpPort))
+                throw new IllegalStateException("videosliceapi.integration.smtp.port not set");
 
-        Properties properties = new Properties();
-        properties.put("mail.smtp.host", smtpServer);
-        properties.put("mail.smtp.port", smtpPort);
-        properties.put("mail.smtp.auth", String.valueOf(usingAuthentication));
-        properties.put("mail.smtp.starttls.enable", smtpTls);
+            String smtpTls = environment.getProperty("videosliceapi.integration.smtp.starttls", "false");
 
-        if (usingAuthentication) {
-            this.mailSession = Session.getInstance(properties, new Authenticator() {
-                @Override
-                protected PasswordAuthentication getPasswordAuthentication() {
-                    return new PasswordAuthentication(smtpUser, smtpPassword);
-                }
-            });
+            String smtpUser = environment.getProperty("videosliceapi.integration.smtp.user");
+            String smtpPassword = environment.getProperty("videosliceapi.integration.smtp.password");
+            boolean usingAuthentication = smtpUser != null && smtpPassword != null;
+
+            this.mailFrom = environment.getProperty("videosliceapi.integration.smtp.mailFrom");
+            if (StringUtils.isEmpty(mailFrom))
+                throw new IllegalStateException("videosliceapi.integration.smtp.mailFrom not set");
+
+            Properties properties = new Properties();
+            properties.put("mail.smtp.host", smtpServer);
+            properties.put("mail.smtp.port", smtpPort);
+            properties.put("mail.smtp.auth", String.valueOf(usingAuthentication));
+            properties.put("mail.smtp.starttls.enable", smtpTls);
+
+            if (usingAuthentication) {
+                this.mailSession = Session.getInstance(properties, new Authenticator() {
+                    @Override
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(smtpUser, smtpPassword);
+                    }
+                });
+            } else {
+                this.mailSession = Session.getInstance(properties);
+            }
         } else {
-            this.mailSession = Session.getInstance(properties);
+            this.mailSession = null;
+            this.mailFrom = null;
         }
-
     }
 
     @Override
     public void sendFinishedJobNotification(Job job) {
         String subject = presenter.finishedJobNotificationTitle(job);
         String body = presenter.finishedJobNotificationBody(job);
-        String recipient = cognitoUserRegistry.getUserEmail(job.userId());
 
-        try {
-            MimeMessage message = new MimeMessage(mailSession);
-            message.setFrom(mailFrom);
-            message.setRecipients(Message.RecipientType.TO, recipient);
-            message.setSubject(subject);
-            message.setContent(body, "text/html; charset=utf-8");
-            Transport.send(message);
-        } catch (Exception e) {
-            LOGGER.error("Failed to send email notification: {}", e, e);
+        if (mailSession != null) {
+            try {
+                String recipient = cognitoUserRegistry.getUserEmail(job.userId());
+
+                MimeMessage message = new MimeMessage(mailSession);
+                message.setFrom(mailFrom);
+                message.setRecipients(Message.RecipientType.TO, recipient);
+                message.setSubject(subject);
+                message.setContent(body, "text/html; charset=utf-8");
+                Transport.send(message);
+            } catch (Exception e) {
+                LOGGER.error("Failed to send email notification: {}", e, e);
+            }
+
+        } else {
+            // SMTP-disabled setup intended to be used on developer environment
+            LOGGER.info("""
+                    -------------------------------------------------------
+                    -- EMAIL NOTIFICATION FOR USER: {}
+                    -- Subject: {}
+                    {}""", job.userId(), subject, body);
         }
     }
 }

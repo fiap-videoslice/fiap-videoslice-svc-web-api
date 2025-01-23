@@ -127,6 +127,8 @@
                         <videosliceapi.datasource.dbUser>videoslice_user</videosliceapi.datasource.dbUser>
                         <videosliceapi.datasource.dbPass>Slice!</videosliceapi.datasource.dbPass>
 
+                        <videosliceapi.integration.smtp.enabled>false</videosliceapi.integration.smtp.enabled>
+
                         <videosliceapi.integration.aws.region>us-east-1</videosliceapi.integration.aws.region>
                         <videosliceapi.integration.cognito.userPoolId>us-east-1_222222222</videosliceapi.integration.cognito.userPoolId>
                         <videosliceapi.integration.cognito.clientId>9999999999</videosliceapi.integration.cognito.clientId>
