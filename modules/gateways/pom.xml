@@ -48,6 +48,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.eclipse.angus</groupId>
+            <artifactId>angus-mail</artifactId>
+            <version>2.0.3</version>
+        </dependency>
+
+        <dependency>
             <!-- Nota: Atenção para a versão do jackson após atualizações do Spring,
                        aqui deve ser usada a mesma versão fornecida pelo spring ao projeto Web -->
             <groupId>com.fasterxml.jackson.core</groupId>
@@ -115,6 +121,13 @@
             <groupId>org.skyscreamer</groupId>
             <artifactId>jsonassert</artifactId>
             <version>2.0-rc1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.kirviq</groupId>
+            <artifactId>dumbster</artifactId>
+            <version>1.7.1</version>
             <scope>test</scope>
         </dependency>
 

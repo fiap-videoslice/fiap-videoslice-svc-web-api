@@ -3,6 +3,7 @@ package com.example.fiap.videosliceapi.domain.usecases;
 import com.example.fiap.videosliceapi.domain.datagateway.JobRepository;
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
+import com.example.fiap.videosliceapi.domain.external.NotificationSender;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
@@ -21,15 +22,17 @@ public class JobUseCases {
     private final JobRepository jobRepository;
     private final VideoEngineService videoEngineService;
     private final MediaStorage mediaStorage;
+    private final NotificationSender notificationSender;
     private final Clock clock;
     private final IdGenerator idGenerator;
 
     public JobUseCases(JobRepository jobRepository, VideoEngineService videoEngineService,
-                       MediaStorage mediaStorage,
+                       MediaStorage mediaStorage, NotificationSender notificationSender,
                        Clock clock, IdGenerator idGenerator) {
         this.jobRepository = jobRepository;
         this.videoEngineService = videoEngineService;
         this.mediaStorage = mediaStorage;
+        this.notificationSender = notificationSender;
         this.clock = clock;
         this.idGenerator = idGenerator;
     }
@@ -82,14 +85,18 @@ public class JobUseCases {
             throw new RuntimeException("Inconsistent response, job [" + response.id() + "] not found");
         }
 
+        boolean isFinishedStatus = false;
+
         Job updated;
         if (response.status() == JobStatus.PROCESSING) {
             updated = job.startProcessing();
         } else if (response.status() == JobStatus.COMPLETE) {
             updated = job.completeProcessing(response.outputFileUri(), clock.now());
+            isFinishedStatus = true;
 
         } else if (response.status() == JobStatus.FAILED) {
             updated = job.errorProcessing(response.message(), clock.now());
+            isFinishedStatus = true;
 
             /*
             SAGA demonstration of an 'undo' operation. When the video engine returns a failure we remove the input file
@@ -101,5 +108,9 @@ public class JobUseCases {
         }
 
         jobRepository.updateMutableAttributes(updated);
+
+        if (isFinishedStatus) {
+            notificationSender.sendFinishedJobNotification(updated);
+        }
     }
 }

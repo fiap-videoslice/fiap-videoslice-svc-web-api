@@ -3,6 +3,7 @@ package com.example.fiap.videosliceapi.domain.usecases;//import static org.junit
 import com.example.fiap.videosliceapi.domain.datagateway.JobRepository;
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
+import com.example.fiap.videosliceapi.domain.external.NotificationSender;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.testUtils.TestConstants;
 import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
@@ -34,6 +35,8 @@ class JobUseCasesTest {
     @Mock
     private MediaStorage mediaStorage;
     @Mock
+    private NotificationSender notificationSender;
+    @Mock
     private Clock clock;
     @Mock
     private IdGenerator idGenerator;
@@ -42,7 +45,8 @@ class JobUseCasesTest {
 
     @BeforeEach
     void setUp() {
-        jobUseCases = new JobUseCases(jobRepository, videoEngineService, mediaStorage, clock, idGenerator);
+        jobUseCases = new JobUseCases(jobRepository, videoEngineService, mediaStorage,
+                notificationSender, clock, idGenerator);
     }
 
     @Test
@@ -143,6 +147,8 @@ class JobUseCasesTest {
         Job expectedJob = job.startProcessing();
 
         verify(jobRepository).updateMutableAttributes(expectedJob);
+
+        verify(notificationSender, never()).sendFinishedJobNotification(any());
     }
 
     @Test
@@ -164,6 +170,8 @@ class JobUseCasesTest {
         Job expectedJob = job.completeProcessing("/output/video1.mp4", TestConstants.INSTANT_2);
 
         verify(jobRepository).updateMutableAttributes(expectedJob);
+
+        verify(notificationSender).sendFinishedJobNotification(expectedJob);
     }
 
     @Test
@@ -185,6 +193,7 @@ class JobUseCasesTest {
         Job expectedJob = job.errorProcessing("Processing error", TestConstants.INSTANT_2);
 
         verify(jobRepository).updateMutableAttributes(expectedJob);
+        verify(notificationSender).sendFinishedJobNotification(expectedJob);
 
         /*
         SAGA demonstration of an 'undo' operation. When the video engine returns a failure we remove the input file
