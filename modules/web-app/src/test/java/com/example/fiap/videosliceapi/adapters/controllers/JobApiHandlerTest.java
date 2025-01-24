@@ -4,7 +4,7 @@ import com.example.fiap.videosliceapi.adapters.auth.DummyTokenParser;
 import com.example.fiap.videosliceapi.adapters.testUtils.DummyTransactionManager;
 import com.example.fiap.videosliceapi.adapters.testUtils.TestConstants;
 import com.example.fiap.videosliceapi.domain.entities.Job;
-import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
+import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -5,7 +5,7 @@ import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
 import com.example.fiap.videosliceapi.domain.external.NotificationSender;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
-import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
+import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
 import com.example.fiap.videosliceapi.domain.utils.IdGenerator;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;

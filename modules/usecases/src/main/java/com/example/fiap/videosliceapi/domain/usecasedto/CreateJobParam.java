@@ -1,4 +1,4 @@
-package com.example.fiap.videosliceapi.domain.usecaseparam;
+package com.example.fiap.videosliceapi.domain.usecasedto;
 
 import org.jetbrains.annotations.NotNull;
 

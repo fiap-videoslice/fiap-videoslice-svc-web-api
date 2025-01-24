@@ -9,7 +9,7 @@ import com.example.fiap.videosliceapi.apiutils.WebUtils;
 import com.example.fiap.videosliceapi.adapters.auth.LoggedUser;
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.exception.DomainArgumentException;
-import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
+import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
