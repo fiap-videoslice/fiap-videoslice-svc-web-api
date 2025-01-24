@@ -10,9 +10,9 @@ import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 class DefaultUserTokenParserTest {
     private CognitoJwksApi cognitoJwksApi;
@@ -52,6 +52,7 @@ class DefaultUserTokenParserTest {
         assertThat(user.authError()).isEqualTo("Authorization header is invalid");
         assertThat(user.authenticated()).isFalse();
 
+        assertThrows(IllegalStateException.class, user::getUserId);
         assertThrows(IllegalStateException.class, user::getName);
         assertThrows(IllegalStateException.class, user::getEmail);
         assertThrows(IllegalStateException.class, user::getGroup);
@@ -82,6 +83,50 @@ class DefaultUserTokenParserTest {
         assertThat(user.getEmail()).isEqualTo("videosliceuser@fiap.example.com");
         assertThat(user.getGroup()).isEqualTo(UserGroup.User);
         assertThat(user.idToken()).isEqualTo(token);
+
+        verify(cognitoJwksApi, times(1)).getKnownSignaturesJson();
+    }
+
+    @Test
+    void verifyLoggedUser_ok_keyCacheUsed() {
+        when(cognitoJwksApi.getKnownSignaturesJson()).thenReturn(EXAMPLE_SIGNATURES_JSON);
+
+        when(expirationCheckClock.now()).thenReturn(new Date(1737321360000L)); // Fixed time before the expiration of the example token
+
+        String token = "eyJraWQiOiJsWndMV01CQ0tNbTFKYTR1VVFSZXJHZ05CdkNWaVpITkplbnZJNVlydVljPSIsImFsZyI6IlJTMjU2In0" +
+                       ".eyJzdWIiOiJiNGU4YjRjOC1iMGUxLTcwOTctZDgwZi00NjI1NmU5ZjgxODkiLCJjb2duaXRvOmdyb3VwcyI6WyJVc2VyIl0sImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX1dPenNQZjlIOSIsImNvZ25pdG86dXNlcm5hbWUiOiJiN" +
+                       "GU4YjRjOC1iMGUxLTcwOTctZDgwZi00NjI1NmU5ZjgxODkiLCJvcmlnaW5fanRpIjoiYTQ2ODIyZDItYzU0MC00MDkxLWJjYzItMTIwNDNlOTdlYjA2IiwiYXVkIjoiNjN1dXVlcWphODNudTFrc3QzcTQxaW5wcGkiLCJldmVudF9pZCI6IjllMjJkZDExLWVkOTctNDZhOS04ZTg1LTk2OTc3NGU1YWU1" +
+                       "ZSIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzM3MzIxMDgxLCJuYW1lIjoiUmVndWxhciBVc2VyIiwiZXhwIjoxNzM3MzI0NjgxLCJpYXQiOjE3MzczMjEwODEsImp0aSI6ImI2MTBjNjI1LTUyNWEtNDA0Ny1iMTZmLTBjYTU3MjIzOTQ2OSIsImVtYWlsIjoidmlkZW9zbGljZXVzZXJAZmlhcC5leGFtcGxlLmNvbSJ9" +
+                       ".S3M-8P4GCbx-eiSi1taP3-oW4d6qEYxVeHCHyWT3dhoMhAl26zPQ7eedH4khUvjNeTPC5yqb3WyiKmqkAFfmLsnY22_onJJ6doSkCSakPI8_pRmr9Bu3yos1PthPlVLYCiIhn3k4JjqUWQuj-7u5qZlKtTT5jjB9M2fNHI7rhqDAgTBPFCCRG7H5-FZ3ZTFtb6XxRNXu1RbY-0119eaSxwvtyq1JEB5qKxoyr3wsOzYI8Ucy1gvhFYFFzDscrnYgn2IF3X-g2TDGLsNN8jHzRNQp4gq40CLsWk4iFQqeqa7I-in2SmGtSyDSwPPNpJefST0tbfwzAzaBPbso3OHLVw";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.put("Authorization", List.of("Bearer " + token));
+
+        var user = parser.verifyLoggedUser(headers);
+        assertThat(user.getUserId()).isEqualTo("b4e8b4c8-b0e1-7097-d80f-46256e9f8189");
+
+        user = parser.verifyLoggedUser(headers);
+        assertThat(user.getUserId()).isEqualTo("b4e8b4c8-b0e1-7097-d80f-46256e9f8189");
+
+        verify(cognitoJwksApi, times(1)).getKnownSignaturesJson();
+    }
+
+    @Test
+    void verifyLoggedUser_invalidHeader() {
+        when(cognitoJwksApi.getKnownSignaturesJson()).thenReturn(EXAMPLE_SIGNATURES_JSON);
+
+        when(expirationCheckClock.now()).thenReturn(new Date(1737321360000L)); // Fixed time before the expiration of the example token
+
+        // Token alterado com uma assinatura incorreta
+        String token = "eyJhbGciOiJSUzI1NiJ9" +
+                       ".eyJzdWIiOiJiNGU4Yj" +
+                       ".NpJefST0tbfwzAzaBPbso3OHLVw";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.put("authorization", List.of("bearer " + token));
+
+        assertThatThrownBy(() -> parser.verifyLoggedUser(headers))
+                .hasMessageContaining("Unexpected JWT header format. Missing kid");
     }
 
     @Test
@@ -104,6 +149,34 @@ class DefaultUserTokenParserTest {
 
         assertThat(user.authError()).startsWith("Erro ao validar IdToken: JWT signature does not match locally computed signature");
         assertThat(user.authenticated()).isFalse();
+    }
+
+    @Test
+    void verifyLoggedUser_invalidServerSignaturesFile() {
+        when(cognitoJwksApi.getKnownSignaturesJson()).thenReturn("NOT_A_VALID_JSON");
+
+        when(expirationCheckClock.now()).thenReturn(new Date(1737321360000L)); // Fixed time before the expiration of the example token
+
+        // Token alterado com uma assinatura incorreta
+        String token = "eyJraWQiOiJsWndMV01CQ0tNbTFKYTR1VVFSZXJHZ05CdkNWaVpITkplbnZJNVlydVljPSIsImFsZyI6IlJTMjU2In0" +
+                       ".eyJzdWIiOiJiNGU4YjRjOC1iMGUxLTcwOTctZDgwZi00NjI1NmU5ZjgxODkiLCJjb2duaXRvOmdyb3VwcyI6WyJVc2VyIl0sImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX1dPenNQZjlIOSIsImNvZ25pdG86dXNlcm5hbWUiOiJiN" +
+                       "GU4YjRjOC1iMGUxLTcwOTctZDgwZi00NjI1NmU5ZjgxODkiLCJvcmlnaW5fanRpIjoiYTQ2ODIyZDItYzU0MC00MDkxLWJjYzItMTIwNDNlOTdlYjA2IiwiYXVkIjoiNjN1dXVlcWphODNudTFrc3QzcTQxaW5wcGkiLCJldmVudF9pZCI6IjllMjJkZDExLWVkOTctNDZhOS04ZTg1LTk2OTc3NGU1YWU1" +
+                       "ZSIsInRva2VuX3VzZSI6ImlkIiwiYXV0aF90aW1lIjoxNzM3MzIxMDgxLCJuYW1lIjoiUmVndWxhciBVc2VyIiwiZXhwIjoxNzM3MzI0NjgxLCJpYXQiOjE3MzczMjEwODEsImp0aSI6ImI2MTBjNjI1LTUyNWEtNDA0Ny1iMTZmLTBjYTU3MjIzOTQ2OSIsImVtYWlsIjoidmlkZW9zbGljZXVzZXJAZmlhcC5leGFtcGxlLmNvbSJ9" +
+                       ".S3M-8P4GCbx-eiSi1taP3-oW4d6qEYxVeHCHyWT3dhoMhAl26zPQ7eedH4khUvjNeTPC5yqb3WyiKmqkAFfmLsnY22_onJJ6doSkCSakPI8_pRmr9Bu3yos1PthPlVLYCiIhn3k4JjqUWQuj-7u5qZlKtTT5jjB9M2fNHI7rhqDAgTBPFCCRG7H5-FZ3ZTFtb6XxRNXu1RbY-0119eaSxwvtyq1JEB5qKxoyr3wsOzYI8Ucy1gvhFYFFzDscrnYgn2IF3X-g2TDGLsNN8jHzRNQp4gq40CLsWk4iFQqeqa7I-in2SmGtSyDSwPPNpJefST0tbfwzAzaBPbso3OHLVw";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.put("authorization", List.of("bearer " + token));
+
+        assertThatThrownBy(() -> parser.verifyLoggedUser(headers))
+                .hasMessageContaining("Error parsing response from Jwks endpoint");
+    }
+
+    @Test
+    void invokeDefaultConstructor() {
+        // The default constructor is not using on the tests because it does not get the controlled clock
+        // for predictable tests
+        // Invoking it here just for coverage
+        new DefaultUserTokenParser(cognitoJwksApi);
     }
 
     @Language("JSON")

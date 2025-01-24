@@ -2,7 +2,7 @@ package com.example.fiap.videosliceapi.adapters.externalsystem;
 
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
-import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
+import com.example.fiap.videosliceapi.domain.usecasedto.JobResponse;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 @Service
 public class VideoEngineServiceImpl implements VideoEngineService {
@@ -34,7 +33,7 @@ public class VideoEngineServiceImpl implements VideoEngineService {
     }
 
     @Override
-    public void receiveAvailableResponseMessages(Consumer<JobResponse> callback) {
+    public void receiveAvailableResponseMessages(ResponseCallback callback) {
         List<VideoEngineServiceQueueApi.MessageSummary> messages = queueApi.receiveMessagesResponseQueue();
 
         messages.forEach(message -> {
@@ -45,7 +44,7 @@ public class VideoEngineServiceImpl implements VideoEngineService {
 
                 LOGGER.info("Response received from engine to job {}", response.id());
 
-                callback.accept(jobResponse);
+                callback.consume(jobResponse);
 
                 queueApi.deleteMessagesResponseQueue(message);
 

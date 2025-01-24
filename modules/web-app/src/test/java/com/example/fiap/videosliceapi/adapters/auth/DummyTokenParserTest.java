@@ -75,6 +75,7 @@ class DummyTokenParserTest {
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isFalse();
+        assertThat(loggedUser.getUserId()).isNull();
         assertThat(loggedUser.getName()).isNull();
         assertThat(loggedUser.getEmail()).isNull();
         assertThat(loggedUser.getGroup()).isNull();
@@ -89,6 +90,7 @@ class DummyTokenParserTest {
         LoggedUser loggedUser = dummyTokenParser.verifyLoggedUser(headers);
 
         assertThat(loggedUser.authenticated()).isFalse();
+        assertThat(loggedUser.getUserId()).isNull();
         assertThat(loggedUser.getName()).isNull();
         assertThat(loggedUser.getEmail()).isNull();
         assertThat(loggedUser.getGroup()).isNull();

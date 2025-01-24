@@ -1,8 +1,10 @@
 package com.example.fiap.videosliceapi.jobs;
 
+import com.example.fiap.videosliceapi.adapters.datasource.TransactionManager;
+import com.example.fiap.videosliceapi.adapters.testUtils.DummyTransactionManager;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
-import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
+import com.example.fiap.videosliceapi.domain.usecasedto.JobResponse;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -24,11 +25,15 @@ public class EngineResponseReceiverTaskTest {
     @Mock
     private JobUseCases jobUseCases;
 
+    private TransactionManager transactionManager;
+
     private EngineResponseReceiverTask engineResponseReceiverTask;
 
     @BeforeEach
     void setUp() {
-        engineResponseReceiverTask = new EngineResponseReceiverTask(videoEngineService, jobUseCases);
+        transactionManager = new DummyTransactionManager();
+
+        engineResponseReceiverTask = new EngineResponseReceiverTask(videoEngineService, jobUseCases, transactionManager);
     }
 
     @Test
@@ -37,8 +42,8 @@ public class EngineResponseReceiverTaskTest {
                 JobStatus.COMPLETE, "/outputs/frames.zip", null);
 
         doAnswer(invocation -> {
-            Consumer<JobResponse> consumer = invocation.getArgument(0);
-            consumer.accept(response);
+            VideoEngineService.ResponseCallback consumer = invocation.getArgument(0);
+            consumer.consume(response);
             return null;
         }).when(videoEngineService).receiveAvailableResponseMessages(any());
 

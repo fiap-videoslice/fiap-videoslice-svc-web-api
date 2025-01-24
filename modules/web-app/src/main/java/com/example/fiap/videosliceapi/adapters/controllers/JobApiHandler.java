@@ -9,7 +9,9 @@ import com.example.fiap.videosliceapi.apiutils.WebUtils;
 import com.example.fiap.videosliceapi.adapters.auth.LoggedUser;
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.exception.DomainArgumentException;
-import com.example.fiap.videosliceapi.domain.usecaseparam.CreateJobParam;
+import com.example.fiap.videosliceapi.domain.exception.DomainPermissionException;
+import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
 import io.swagger.v3.oas.annotations.Operation;
 import org.slf4j.Logger;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 public class JobApiHandler {
@@ -50,8 +53,6 @@ public class JobApiHandler {
 
         } catch (LoggedUserCheck.NotAuthenticatedException nae) {
             return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, nae.getMessage());
-        } catch (DomainArgumentException iae) {
-            return WebUtils.errorResponse(HttpStatus.BAD_REQUEST, iae.getMessage());
         } catch (Exception e) {
             LOGGER.error("Error while listing jobs: {}", e, e);
             return WebUtils.errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error while listing jobs");
@@ -84,13 +85,35 @@ public class JobApiHandler {
 
         } catch (LoggedUserCheck.NotAuthenticatedException nae) {
             return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, nae.getMessage());
-        } catch (DomainArgumentException iae) {
-            return WebUtils.errorResponse(HttpStatus.BAD_REQUEST, iae.getMessage());
         } catch (Exception e) {
             LOGGER.error("Error while creating or starting job: {}", e, e);
             return WebUtils.errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error while creating or starting job");
         }
 
         return WebUtils.okResponse(JobCreationResponseDto.fromEntity(newJob));
+    }
+
+    @Operation(summary = "Get download link for complete job")
+    @GetMapping(path = "/jobs/{uuid}/download", produces = "application/json")
+    public ResponseEntity<DownloadLink> getDownloadLink(@RequestHeader HttpHeaders headers, @PathVariable("uuid") String uuidParam) {
+        try {
+            LoggedUser loggedUser = LoggedUserCheck.ensureLoggedUser(loggedUserTokenParser, headers);
+
+            UUID uuid = UUID.fromString(uuidParam);
+
+            DownloadLink downloadLink = jobUseCases.getResultFileDownloadLink(uuid, loggedUser.getUserId());
+
+            return WebUtils.okResponse(downloadLink);
+
+        } catch (LoggedUserCheck.NotAuthenticatedException nae) {
+            return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, nae.getMessage());
+        } catch (DomainPermissionException dpe) {
+            return WebUtils.errorResponse(HttpStatus.FORBIDDEN, dpe.getMessage());
+        } catch (IllegalArgumentException iae) {
+            return WebUtils.errorResponse(HttpStatus.BAD_REQUEST, iae.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Error while listing jobs: {}", e, e);
+            return WebUtils.errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error while listing jobs");
+        }
     }
 }

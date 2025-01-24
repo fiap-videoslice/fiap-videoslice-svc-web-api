@@ -6,6 +6,7 @@ import com.example.fiap.videosliceapi.adapters.auth.DummyTokenParser;
 import com.example.fiap.videosliceapi.adapters.auth.LoggedUserTokenParser;
 import com.example.fiap.videosliceapi.domain.datagateway.JobRepository;
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
+import com.example.fiap.videosliceapi.domain.external.NotificationSender;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
@@ -31,10 +32,10 @@ public class DomainServiceBeans {
             && Boolean.parseBoolean(environment.getProperty(DummyTokenParser.ENABLE_DUMMY_TOKENS_ENV_KEY))) {
 
             LOGGER.warn("""
-                -------------------------------------------------------------------
-                DUMMY AUTHENTICATION TOKENS FOR DEVELOPMENT ENVIRONMENT ARE ENABLED
-                -------------------------------------------------------------------
-                """);
+                    -------------------------------------------------------------------
+                    DUMMY AUTHENTICATION TOKENS FOR DEVELOPMENT ENVIRONMENT ARE ENABLED
+                    -------------------------------------------------------------------
+                    """);
             return new DummyTokenParser();
         }
 
@@ -43,10 +44,11 @@ public class DomainServiceBeans {
 
     @Bean
     public JobUseCases jobUseCases(JobRepository jobRepository,
-                                        VideoEngineService videoEngineService,
-                                        MediaStorage mediaStorage,
-                                        Clock clock) {
-        return new JobUseCases(jobRepository, videoEngineService, mediaStorage, clock, new IdGenerator());
+                                   VideoEngineService videoEngineService,
+                                   MediaStorage mediaStorage,
+                                   NotificationSender notificationSender,
+                                   Clock clock) {
+        return new JobUseCases(jobRepository, videoEngineService, mediaStorage, notificationSender, clock, new IdGenerator());
     }
 
 }
