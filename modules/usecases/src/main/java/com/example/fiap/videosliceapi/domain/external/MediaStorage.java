@@ -1,5 +1,7 @@
 package com.example.fiap.videosliceapi.domain.external;
 
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
+
 import java.util.UUID;
 
 public interface MediaStorage {
@@ -12,4 +14,9 @@ public interface MediaStorage {
      * Removes the video - to be used when the request is cancelled for example
      */
     void removeInputVideo(UUID uuid);
+
+    /**
+     * @return A full URL valid for download of the given file
+     */
+    DownloadLink getOutputFileDownloadLink(String outputFileUri);
 }

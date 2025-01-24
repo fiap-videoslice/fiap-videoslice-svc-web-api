@@ -34,6 +34,9 @@ public class EmailNotificationSender implements NotificationSender {
         this.cognitoUserRegistry = cognitoUserRegistry;
 
         String smtpEnabledEnv = environment.getProperty("videosliceapi.integration.smtp.enabled");
+        if (StringUtils.isEmpty(smtpEnabledEnv))
+            throw new IllegalStateException("videosliceapi.integration.smtp.enabled not set");
+
         boolean smtpEnabled = Boolean.parseBoolean(smtpEnabledEnv);
 
         if (smtpEnabled) {

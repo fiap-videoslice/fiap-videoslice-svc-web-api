@@ -4,7 +4,9 @@ import com.example.fiap.videosliceapi.adapters.auth.DummyTokenParser;
 import com.example.fiap.videosliceapi.adapters.testUtils.DummyTransactionManager;
 import com.example.fiap.videosliceapi.adapters.testUtils.TestConstants;
 import com.example.fiap.videosliceapi.domain.entities.Job;
+import com.example.fiap.videosliceapi.domain.exception.DomainPermissionException;
 import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,9 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -61,5 +66,45 @@ class JobApiHandlerTest {
                           "message": "Job created"
                         }
                         """));
+    }
+
+    @Test
+    void getDownloadLink_validRequest_shouldReturnDownloadLink() throws Exception {
+        String uuid = TestConstants.ID_1.toString();
+        when(jobUseCases.getResultFileDownloadLink(TestConstants.ID_1, "Test-User-1"))
+                .thenReturn(new DownloadLink("https://example.com/file.zip", 60));
+
+        mockMvc.perform(get("/jobs/{uuid}/download", uuid)
+                        .header("Authorization", "Dummy User1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                          {"url": "https://example.com/file.zip", "expirationMinutes": 60}
+                        """));
+    }
+
+    @Test
+    void getDownloadLink_invalidUUID_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(get("/jobs/{uuid}/download", "invalid-uuid")
+                        .header("Authorization", "Dummy User1"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getDownloadLink_unauthorized_shouldReturnUnauthorized() throws Exception {
+        String uuid = TestConstants.ID_1.toString();
+        mockMvc.perform(get("/jobs/{uuid}/download", uuid))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getDownloadLink_noFileAccess_shouldReturnForbidden() throws Exception {
+        String uuid = TestConstants.ID_1.toString();
+
+        when(jobUseCases.getResultFileDownloadLink(TestConstants.ID_1, "Test-User-2"))
+                .thenThrow(new DomainPermissionException("You are not the owner"));
+
+        mockMvc.perform(get("/jobs/{uuid}/download", uuid)
+                        .header("Authorization", "Dummy User2"))
+                .andExpect(status().isForbidden());
     }
 }

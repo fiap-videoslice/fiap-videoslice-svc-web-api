@@ -36,6 +36,7 @@ class EmailNotificationSenderIT {
         dumbster = SimpleSmtpServer.start(SimpleSmtpServer.AUTO_SMTP_PORT);
 
         emailNotificationSender = new EmailNotificationSender(cognitoUserRegistry, new StaticEnvironment(Map.of(
+                "videosliceapi.integration.smtp.enabled", "true",
                 "videosliceapi.integration.smtp.server", "localhost",
                 "videosliceapi.integration.smtp.port", String.valueOf(dumbster.getPort()),
                 "videosliceapi.integration.smtp.starttls", "false",
@@ -101,6 +102,7 @@ class EmailNotificationSenderIT {
         when(cognitoUserRegistry.getUserEmail("User_ABC")).thenReturn("user@fiap.example.com");
 
         EmailNotificationSender authenticatedSender = new EmailNotificationSender(cognitoUserRegistry, new StaticEnvironment(Map.of(
+                "videosliceapi.integration.smtp.enabled", "true",
                 "videosliceapi.integration.smtp.server", "localhost",
                 "videosliceapi.integration.smtp.port", String.valueOf(dumbster.getPort()),
                 "videosliceapi.integration.smtp.starttls", "false",

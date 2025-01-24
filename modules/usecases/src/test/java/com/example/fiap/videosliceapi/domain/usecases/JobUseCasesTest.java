@@ -2,11 +2,14 @@ package com.example.fiap.videosliceapi.domain.usecases;//import static org.junit
 
 import com.example.fiap.videosliceapi.domain.datagateway.JobRepository;
 import com.example.fiap.videosliceapi.domain.entities.Job;
+import com.example.fiap.videosliceapi.domain.exception.DomainArgumentException;
+import com.example.fiap.videosliceapi.domain.exception.DomainPermissionException;
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
 import com.example.fiap.videosliceapi.domain.external.NotificationSender;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.testUtils.TestConstants;
 import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
 import com.example.fiap.videosliceapi.domain.utils.IdGenerator;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
@@ -234,5 +237,81 @@ class JobUseCasesTest {
         );
 
         assertThat(exception.getMessage()).isEqualTo("Invalid status for transition: CREATED");
+    }
+
+    @Test
+    void getResultFileDownloadLink_success() throws DomainPermissionException {
+        Job job = new Job(
+                TestConstants.ID_1,
+                "/input/video1.mp4",
+                10,
+                JobStatus.COMPLETE,
+                "/output/video1-frames.zip",
+                null,
+                TestConstants.INSTANT_1,
+                TestConstants.INSTANT_2,
+                "User_123_456"
+        );
+
+        when(jobRepository.findById(TestConstants.ID_1, false)).thenReturn(job);
+
+        DownloadLink expectedDownloadLink = new DownloadLink("https://download.example.com/video1-frames.zip", 60);
+        when(mediaStorage.getOutputFileDownloadLink("/output/video1-frames.zip")).thenReturn(expectedDownloadLink);
+
+        DownloadLink result = jobUseCases.getResultFileDownloadLink(TestConstants.ID_1, "User_123_456");
+
+        assertThat(result).isEqualTo(expectedDownloadLink);
+    }
+
+    @Test
+    void getResultFileDownloadLink_jobNotFound() {
+        when(jobRepository.findById(TestConstants.ID_1, false)).thenReturn(null);
+
+        DomainArgumentException exception = Assertions.assertThrows(DomainArgumentException.class,
+                () -> jobUseCases.getResultFileDownloadLink(TestConstants.ID_1, "User_999_888"));
+
+        assertThat(exception.getMessage()).isEqualTo("Job [123e4567-e89b-12d3-a456-426614174000] not found");
+    }
+
+    @Test
+    void getResultFileDownloadLink_jobNotComplete() {
+        Job job = Job.createJob(
+                TestConstants.ID_1,
+                "/input/video1.mp4",
+                10,
+                TestConstants.INSTANT_1,
+                "User_123_456"
+        );
+
+        when(jobRepository.findById(TestConstants.ID_1, false)).thenReturn(job);
+
+        DomainArgumentException exception = Assertions.assertThrows(DomainArgumentException.class,
+                () -> jobUseCases.getResultFileDownloadLink(TestConstants.ID_1, "User_123_456"));
+
+        assertThat(exception.getMessage()).isEqualTo("Job [123e4567-e89b-12d3-a456-426614174000] is not complete. Current status: CREATED");
+    }
+
+    @Test
+    void getResultFileDownloadLink_userNotOwner_throwsException() {
+        Job job = new Job(
+                TestConstants.ID_1,
+                "/input/video1.mp4",
+                10,
+                JobStatus.COMPLETE,
+                "/output/video1-frames.zip",
+                null,
+                TestConstants.INSTANT_1,
+                TestConstants.INSTANT_2,
+                "User_123_456"
+        );
+
+        when(jobRepository.findById(TestConstants.ID_1, false)).thenReturn(job);
+
+        DomainPermissionException exception = Assertions.assertThrows(
+                DomainPermissionException.class,
+                () -> jobUseCases.getResultFileDownloadLink(TestConstants.ID_1, "User_999_888")
+        );
+
+        assertThat(exception.getMessage()).isEqualTo("User is not the owner of the job");
     }
 }

@@ -1,6 +1,7 @@
 package com.example.fiap.videosliceapi.adapters.externalsystem.integration;
 
 import com.example.fiap.videosliceapi.adapters.externalsystem.S3MediaStorage;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.testUtils.StaticEnvironment;
 import org.junit.jupiter.api.*;
 import org.testcontainers.containers.localstack.LocalStackContainer;
@@ -8,10 +9,12 @@ import org.testcontainers.utility.DockerImageName;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.util.Map;
 import java.util.UUID;
@@ -137,6 +140,31 @@ public class S3MediaStorageIT {
             assertThatThrownBy(() -> invalidConfigurationMediaStorage.removeInputVideo(UUID.randomUUID()))
                     .hasMessageContaining("bucket does not exist");
         }
+    }
+
+    @Test
+    void getOutputFileDownloadLink() {
+        byte[] videoBytes = new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
+        try (S3Client s3Client = createTestClient()) {
+            s3Client.putObject(
+                    PutObjectRequest.builder()
+                            .bucket(RESULTS_BUCKET)
+                            .key("downloadable-file.dat")
+                            .contentLength((long) videoBytes.length)
+                            .build(),
+                    RequestBody.fromBytes(videoBytes)
+            );
+        }
+
+        DownloadLink link = s3MediaStorage.getOutputFileDownloadLink("downloadable-file.dat");
+
+        // Just some basic sanity-check to ensure that the call worked
+        assertThat(link).isNotNull();
+        assertThat(link.url()).isNotNull();
+        assertThat(link.url().startsWith("http://") || link.url().startsWith("https://")).isTrue();
+
+        assertThat(link.expirationMinutes()).isEqualTo(20L);
     }
 
     private static S3Client createTestClient() {

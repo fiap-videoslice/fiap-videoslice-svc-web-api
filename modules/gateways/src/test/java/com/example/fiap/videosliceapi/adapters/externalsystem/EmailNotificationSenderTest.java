@@ -51,6 +51,21 @@ class EmailNotificationSenderTest {
     }
 
     @Test
+    void sendFinishedJobNotification_configFailure_missingEnabledFlag() {
+        CognitoUserRegistry cognitoUserRegistry = mock();
+
+        StaticEnvironment environment = new StaticEnvironment(Map.of(
+//                "videosliceapi.integration.smtp.enabled", "true",
+                "videosliceapi.integration.smtp.server", "smtp.example.com",
+                "videosliceapi.integration.smtp.port", "587",
+                "videosliceapi.integration.smtp.mailFrom", "no-reply@example.com"
+        ));
+
+        assertThatThrownBy(() -> new EmailNotificationSender(cognitoUserRegistry, environment))
+                .hasMessageContaining("videosliceapi.integration.smtp.enabled not set");
+    }
+
+    @Test
     void sendFinishedJobNotification_configFailure_missingPort() {
         CognitoUserRegistry cognitoUserRegistry = mock();
 

@@ -2,10 +2,13 @@ package com.example.fiap.videosliceapi.domain.usecases;
 
 import com.example.fiap.videosliceapi.domain.datagateway.JobRepository;
 import com.example.fiap.videosliceapi.domain.entities.Job;
+import com.example.fiap.videosliceapi.domain.exception.DomainArgumentException;
+import com.example.fiap.videosliceapi.domain.exception.DomainPermissionException;
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
 import com.example.fiap.videosliceapi.domain.external.NotificationSender;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
 import com.example.fiap.videosliceapi.domain.utils.IdGenerator;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
@@ -112,5 +115,23 @@ public class JobUseCases {
         if (isFinishedStatus) {
             notificationSender.sendFinishedJobNotification(updated);
         }
+    }
+
+    public DownloadLink getResultFileDownloadLink(UUID jobId, String requesterUserId) throws DomainPermissionException {
+        Job job = jobRepository.findById(jobId, false);
+
+        if (job == null) {
+            throw new DomainArgumentException("Job [" + jobId + "] not found");
+        }
+
+        if (!job.userId().equals(requesterUserId)) {
+            throw new DomainPermissionException("User is not the owner of the job");
+        }
+
+        if (job.status() != JobStatus.COMPLETE) {
+            throw new DomainArgumentException("Job [" + job.id() + "] is not complete. Current status: " + job.status());
+        }
+
+        return mediaStorage.getOutputFileDownloadLink(job.outputFileUri());
     }
 }

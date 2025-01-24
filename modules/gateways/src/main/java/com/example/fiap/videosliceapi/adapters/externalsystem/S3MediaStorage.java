@@ -1,6 +1,7 @@
 package com.example.fiap.videosliceapi.adapters.externalsystem;
 
 import com.example.fiap.videosliceapi.domain.external.MediaStorage;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,16 +11,22 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.time.Duration;
 import java.util.UUID;
 
 @Service
 public class S3MediaStorage implements MediaStorage, AutoCloseable {
+    private static final long DOWNLOAD_EXPIRATION_TIME = 20;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(S3MediaStorage.class);
 
     private final S3Client s3Client;
+    private final S3Presigner s3Presigner;
     private final String requestBucketName;
     private final String resultBucketName;
 
@@ -38,6 +45,12 @@ public class S3MediaStorage implements MediaStorage, AutoCloseable {
         builder = AwsClientUtils.maybeOverrideEndpoint(builder, environment);
 
         s3Client = builder.build();
+
+        S3Presigner.Builder presignerBuilder = S3Presigner.builder()
+                .region(Region.US_EAST_1);
+        presignerBuilder = AwsClientUtils.maybeOverrideEndpoint(presignerBuilder, environment);
+
+        s3Presigner = presignerBuilder.build();
     }
 
     @Override
@@ -72,6 +85,23 @@ public class S3MediaStorage implements MediaStorage, AutoCloseable {
         );
     }
 
+    @Override
+    public DownloadLink getOutputFileDownloadLink(String outputFileUri) {
+        LOGGER.info("Generating signed URL for file {} in bucket {}", outputFileUri, resultBucketName);
+
+        GetObjectRequest getObjectRequest = GetObjectRequest.builder()
+                .bucket(resultBucketName)
+                .key(outputFileUri)
+                .build();
+
+        String url = s3Presigner.presignGetObject(request -> request
+                .getObjectRequest(getObjectRequest)
+                .signatureDuration(Duration.ofMinutes(DOWNLOAD_EXPIRATION_TIME))
+        ).url().toString();
+
+        return new DownloadLink(url, DOWNLOAD_EXPIRATION_TIME);
+    }
+
     private static @NotNull String uuidToFileName(UUID uuid) {
         return "input-video-" + uuid + ".mp4";
     }
@@ -79,5 +109,6 @@ public class S3MediaStorage implements MediaStorage, AutoCloseable {
     @Override
     public void close() throws Exception {
         s3Client.close();
+        s3Presigner.close();
     }
 }
