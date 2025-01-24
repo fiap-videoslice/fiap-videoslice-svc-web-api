@@ -53,8 +53,6 @@ public class JobApiHandler {
 
         } catch (LoggedUserCheck.NotAuthenticatedException nae) {
             return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, nae.getMessage());
-        } catch (DomainArgumentException iae) {
-            return WebUtils.errorResponse(HttpStatus.BAD_REQUEST, iae.getMessage());
         } catch (Exception e) {
             LOGGER.error("Error while listing jobs: {}", e, e);
             return WebUtils.errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error while listing jobs");
@@ -87,8 +85,6 @@ public class JobApiHandler {
 
         } catch (LoggedUserCheck.NotAuthenticatedException nae) {
             return WebUtils.errorResponse(HttpStatus.UNAUTHORIZED, nae.getMessage());
-        } catch (DomainArgumentException iae) {
-            return WebUtils.errorResponse(HttpStatus.BAD_REQUEST, iae.getMessage());
         } catch (Exception e) {
             LOGGER.error("Error while creating or starting job: {}", e, e);
             return WebUtils.errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Error while creating or starting job");

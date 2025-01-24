@@ -18,10 +18,10 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import java.util.List;
 
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -69,6 +69,54 @@ class JobApiHandlerTest {
     }
 
     @Test
+    void startNewJob_errorEmptyFile() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "video.mp4", MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                new byte[0]
+        );
+
+        mockMvc.perform(multipart("/jobs")
+                        .file(file)
+                        .param("sliceIntervalSeconds", "5")
+                        .header("Authorization", "Dummy User1")
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void startNewJob_errorUnauthorized() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "video.mp4", MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                TestConstants.VIDEO_BYTES
+        );
+
+        mockMvc.perform(multipart("/jobs")
+                        .file(file)
+                        .param("sliceIntervalSeconds", "5")
+                        .header("Authorization", "Dummy InvalidLoginToken")
+                )
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void startNewJob_serverError() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+                "file", "video.mp4", MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                TestConstants.VIDEO_BYTES
+        );
+
+        when(jobUseCases.createNewJob(new CreateJobParam(TestConstants.VIDEO_BYTES, 5), "Test-User-1"))
+                .thenThrow(new RuntimeException("Unexpected error"));
+
+        mockMvc.perform(multipart("/jobs")
+                        .file(file)
+                        .param("sliceIntervalSeconds", "5")
+                        .header("Authorization", "Dummy User1")
+                )
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
     void getDownloadLink_validRequest_shouldReturnDownloadLink() throws Exception {
         String uuid = TestConstants.ID_1.toString();
         when(jobUseCases.getResultFileDownloadLink(TestConstants.ID_1, "Test-User-1"))
@@ -94,6 +142,62 @@ class JobApiHandlerTest {
         String uuid = TestConstants.ID_1.toString();
         mockMvc.perform(get("/jobs/{uuid}/download", uuid))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getDownloadLink_serverError() throws Exception {
+        String uuid = TestConstants.ID_1.toString();
+        when(jobUseCases.getResultFileDownloadLink(TestConstants.ID_1, "Test-User-1"))
+                .thenThrow(new RuntimeException("Unexpected error"));
+
+        mockMvc.perform(get("/jobs/{uuid}/download", uuid)
+                        .header("Authorization", "Dummy User1"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void listUserJobs_validRequest_shouldReturnJobList() throws Exception {
+        when(jobUseCases.listJobsFromUser("Test-User-1"))
+                .thenReturn(List.of(
+                        Job.createJob(TestConstants.ID_1, "/input/video_1.mp4", 5, TestConstants.INSTANT_1, "Test-User-1"),
+                        Job.createJob(TestConstants.ID_2, "/input/video_2.mp4", 10, TestConstants.INSTANT_1, "Test-User-1")
+                ));
+
+        mockMvc.perform(get("/jobs")
+                        .header("Authorization", "Dummy User1"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                        [
+                          {
+                            "id": "123e4567-e89b-12d3-a456-426614174000",
+                            "sliceIntervalSeconds": 5,
+                            "status": "CREATED",
+                            "startTime": "2025-01-08T00:55:43Z"
+                          },
+                          {
+                            "id": "228cc54f-4ff0-41b3-b407-15b095f92614",
+                            "sliceIntervalSeconds": 10,
+                            "status": "CREATED",
+                            "startTime": "2025-01-08T00:55:43Z"
+                          }
+                        ]
+                        """));
+    }
+
+    @Test
+    void listUserJobs_unauthorized_shouldReturnUnauthorized() throws Exception {
+        mockMvc.perform(get("/jobs"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void listUserJobs_internalError_shouldReturnInternalServerError() throws Exception {
+        when(jobUseCases.listJobsFromUser("Test-User-1"))
+                .thenThrow(new RuntimeException("Unexpected error"));
+
+        mockMvc.perform(get("/jobs")
+                        .header("Authorization", "Dummy User1"))
+                .andExpect(status().isInternalServerError());
     }
 
     @Test
