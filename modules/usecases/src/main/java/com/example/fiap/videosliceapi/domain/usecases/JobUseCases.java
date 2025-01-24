@@ -11,7 +11,7 @@ import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.domain.utils.Clock;
 import com.example.fiap.videosliceapi.domain.utils.IdGenerator;
-import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
+import com.example.fiap.videosliceapi.domain.usecasedto.JobResponse;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

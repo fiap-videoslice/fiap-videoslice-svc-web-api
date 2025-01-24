@@ -2,7 +2,7 @@ package com.example.fiap.videosliceapi.adapters.externalsystem;
 
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
-import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
+import com.example.fiap.videosliceapi.domain.usecasedto.JobResponse;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 import org.intellij.lang.annotations.Language;
 import org.junit.jupiter.api.BeforeEach;

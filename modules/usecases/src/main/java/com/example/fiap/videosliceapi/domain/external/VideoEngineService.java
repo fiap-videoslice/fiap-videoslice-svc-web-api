@@ -1,7 +1,7 @@
 package com.example.fiap.videosliceapi.domain.external;
 
 import com.example.fiap.videosliceapi.domain.entities.Job;
-import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
+import com.example.fiap.videosliceapi.domain.usecasedto.JobResponse;
 
 import java.io.IOException;
 

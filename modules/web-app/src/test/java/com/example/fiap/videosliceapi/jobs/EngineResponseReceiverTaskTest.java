@@ -4,7 +4,7 @@ import com.example.fiap.videosliceapi.adapters.datasource.TransactionManager;
 import com.example.fiap.videosliceapi.adapters.testUtils.DummyTransactionManager;
 import com.example.fiap.videosliceapi.domain.external.VideoEngineService;
 import com.example.fiap.videosliceapi.domain.usecases.JobUseCases;
-import com.example.fiap.videosliceapi.domain.valueobjects.JobResponse;
+import com.example.fiap.videosliceapi.domain.usecasedto.JobResponse;
 import com.example.fiap.videosliceapi.domain.valueobjects.JobStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.UUID;
-import java.util.function.Consumer;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
