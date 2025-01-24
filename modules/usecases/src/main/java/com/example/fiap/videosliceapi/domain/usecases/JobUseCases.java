@@ -113,7 +113,14 @@ public class JobUseCases {
         jobRepository.updateMutableAttributes(updated);
 
         if (isFinishedStatus) {
-            notificationSender.sendFinishedJobNotification(updated);
+            DownloadLink downloadLink;
+            if (updated.status() == JobStatus.COMPLETE) {
+                downloadLink = mediaStorage.getOutputFileDownloadLink(updated.outputFileUri());
+            } else {
+                downloadLink = null;
+            }
+
+            notificationSender.sendFinishedJobNotification(updated, downloadLink);
         }
     }
 

@@ -151,7 +151,7 @@ class JobUseCasesTest {
 
         verify(jobRepository).updateMutableAttributes(expectedJob);
 
-        verify(notificationSender, never()).sendFinishedJobNotification(any());
+        verify(notificationSender, never()).sendFinishedJobNotification(any(), any());
     }
 
     @Test
@@ -166,15 +166,18 @@ class JobUseCasesTest {
         when(jobRepository.findById(TestConstants.ID_1, true)).thenReturn(job);
         when(clock.now()).thenReturn(TestConstants.INSTANT_2);
 
-        JobResponse response = new JobResponse(TestConstants.ID_1, JobStatus.COMPLETE, "/output/video1.mp4", null);
+        JobResponse response = new JobResponse(TestConstants.ID_1, JobStatus.COMPLETE, "/output/video1-frames.zip", null);
+
+        DownloadLink expectedDownloadLink = new DownloadLink("https://download.example.com/video1-frames.zip", 60);
+        when(mediaStorage.getOutputFileDownloadLink("/output/video1-frames.zip")).thenReturn(expectedDownloadLink);
 
         jobUseCases.updateJobStatus(response);
 
-        Job expectedJob = job.completeProcessing("/output/video1.mp4", TestConstants.INSTANT_2);
+        Job expectedJob = job.completeProcessing("/output/video1-frames.zip", TestConstants.INSTANT_2);
 
         verify(jobRepository).updateMutableAttributes(expectedJob);
 
-        verify(notificationSender).sendFinishedJobNotification(expectedJob);
+        verify(notificationSender).sendFinishedJobNotification(expectedJob, expectedDownloadLink);
     }
 
     @Test
@@ -196,7 +199,7 @@ class JobUseCasesTest {
         Job expectedJob = job.errorProcessing("Processing error", TestConstants.INSTANT_2);
 
         verify(jobRepository).updateMutableAttributes(expectedJob);
-        verify(notificationSender).sendFinishedJobNotification(expectedJob);
+        verify(notificationSender).sendFinishedJobNotification(expectedJob, null);
 
         /*
         SAGA demonstration of an 'undo' operation. When the video engine returns a failure we remove the input file

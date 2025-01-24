@@ -1,6 +1,7 @@
 package com.example.fiap.videosliceapi.adapters.externalsystem;//import static org.junit.jupiter.api.Assertions.*;
 
 import com.example.fiap.videosliceapi.domain.entities.Job;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.testUtils.StaticEnvironment;
 import org.junit.jupiter.api.Test;
 
@@ -28,9 +29,10 @@ class EmailNotificationSenderTest {
 
         Job completeJob = Job.createJob(UUID.randomUUID(), "input-file.mp4", 10, Instant.now(), "User_ABC")
                 .completeProcessing("output-file.zip", Instant.now());
+        DownloadLink downloadLink = new DownloadLink("https://download.example.com/video1-frames.zip", 60);
 
         // Send is a no-op, our only expectation is that it does not fail trying some operation with mail server
-        authenticatedSender.sendFinishedJobNotification(completeJob);
+        authenticatedSender.sendFinishedJobNotification(completeJob, downloadLink);
 
         verify(cognitoUserRegistry, never()).getUserEmail(anyString());
     }
@@ -110,10 +112,12 @@ class EmailNotificationSenderTest {
         Job completeJob = Job.createJob(UUID.randomUUID(), "input-file.mp4", 10, Instant.now(), "User_ABC")
                 .completeProcessing("output-file.zip", Instant.now());
 
+        DownloadLink downloadLink = new DownloadLink("https://download.example.com/video1-frames.zip", 60);
+
         // Simulating exception during email sending
         doThrow(new RuntimeException("SMTP error")).when(cognitoUserRegistry).getUserEmail(anyString());
 
         // Attempting to send email won't throw, just log the exception
-        authenticatedSender.sendFinishedJobNotification(completeJob);
+        authenticatedSender.sendFinishedJobNotification(completeJob, downloadLink);
     }
 }

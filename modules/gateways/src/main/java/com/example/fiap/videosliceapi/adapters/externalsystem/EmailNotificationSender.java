@@ -2,6 +2,7 @@ package com.example.fiap.videosliceapi.adapters.externalsystem;
 
 import com.example.fiap.videosliceapi.domain.entities.Job;
 import com.example.fiap.videosliceapi.domain.external.NotificationSender;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.domain.utils.StringUtils;
 import com.example.fiap.videosliceapi.presenters.EmailNotificationPresenter;
 import jakarta.mail.Authenticator;
@@ -81,9 +82,9 @@ public class EmailNotificationSender implements NotificationSender {
     }
 
     @Override
-    public void sendFinishedJobNotification(Job job) {
+    public void sendFinishedJobNotification(Job job, DownloadLink downloadLink) {
         String subject = presenter.finishedJobNotificationTitle(job);
-        String body = presenter.finishedJobNotificationBody(job);
+        String body = presenter.finishedJobNotificationBody(job, downloadLink);
 
         if (mailSession != null) {
             try {

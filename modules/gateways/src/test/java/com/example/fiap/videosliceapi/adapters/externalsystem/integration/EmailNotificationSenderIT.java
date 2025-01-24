@@ -5,6 +5,7 @@ import com.dumbster.smtp.SmtpMessage;
 import com.example.fiap.videosliceapi.adapters.externalsystem.CognitoUserRegistry;
 import com.example.fiap.videosliceapi.adapters.externalsystem.EmailNotificationSender;
 import com.example.fiap.videosliceapi.domain.entities.Job;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import com.example.fiap.videosliceapi.testUtils.StaticEnvironment;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +60,8 @@ class EmailNotificationSenderIT {
         Job completeJob = Job.createJob(id, "input-file.mp4", 10, Instant.now(), "User_ABC")
                 .completeProcessing("output-file.zip", Instant.now());
 
-        emailNotificationSender.sendFinishedJobNotification(completeJob);
+        DownloadLink downloadLink = new DownloadLink("https://download.example.com/video1-frames.zip", 60);
+        emailNotificationSender.sendFinishedJobNotification(completeJob, downloadLink);
 
         List<SmtpMessage> receivedEmails = dumbster.getReceivedEmails();
         assertThat(receivedEmails).hasSize(1);
@@ -70,6 +72,7 @@ class EmailNotificationSenderIT {
 
         assertThat(email.getBody()).contains("f4881488-1091-70b1-21fe-6dc5cce9c313");
         assertThat(email.getBody()).contains("has completed successfully");
+        assertThat(email.getBody()).contains("https://download.example.com/video1-frames.zip");
     }
 
     @Test
@@ -80,7 +83,7 @@ class EmailNotificationSenderIT {
         Job failedJob = Job.createJob(id, "input-file.mp4", 10, Instant.now(), "User_ABC")
                 .errorProcessing("Invalid video file", Instant.now());
 
-        emailNotificationSender.sendFinishedJobNotification(failedJob);
+        emailNotificationSender.sendFinishedJobNotification(failedJob, null);
 
         List<SmtpMessage> receivedEmails = dumbster.getReceivedEmails();
         assertThat(receivedEmails).hasSize(1);
@@ -114,13 +117,15 @@ class EmailNotificationSenderIT {
 
         Job completeJob = Job.createJob(UUID.randomUUID(), "input-file.mp4", 10, Instant.now(), "User_ABC")
                 .completeProcessing("output-file.zip", Instant.now());
+        DownloadLink downloadLink = new DownloadLink("https://download.example.com/video1-frames.zip", 60);
 
-        authenticatedSender.sendFinishedJobNotification(completeJob);
+        authenticatedSender.sendFinishedJobNotification(completeJob, downloadLink);
     }
 
     @Test @Disabled("This test is intended to be used manually, it depends on the communication with a real server")
     void sendFinishedJobNotification_real() {
         EmailNotificationSender realSender = new EmailNotificationSender(cognitoUserRegistry, new StaticEnvironment(Map.of(
+                "videosliceapi.integration.smtp.enabled", "true",
                 "videosliceapi.integration.smtp.server", "smtp.gmail.com",
                 "videosliceapi.integration.smtp.port", "587",
                 "videosliceapi.integration.smtp.starttls", "true",
@@ -130,12 +135,14 @@ class EmailNotificationSenderIT {
                 "videosliceapi.integration.smtp.password", "<password>"
         )));
 
-        when(cognitoUserRegistry.getUserEmail("User_ABC")).thenReturn("gomesrodrigo0481@gmail.com");
+        when(cognitoUserRegistry.getUserEmail("User_ABC")).thenReturn("real_user@fiap.example.com");
 
         Job completeJob = Job.createJob(UUID.randomUUID(), "input-file.mp4", 10, Instant.now(), "User_ABC")
                 .completeProcessing("output-file.zip", Instant.now());
 
-        realSender.sendFinishedJobNotification(completeJob);
+        DownloadLink downloadLink = new DownloadLink("https://download.example.com/video1-frames.zip", 60);
+
+        realSender.sendFinishedJobNotification(completeJob, downloadLink);
 
         System.out.println("===============================================\nReal mail sent. Check inbox");
     }

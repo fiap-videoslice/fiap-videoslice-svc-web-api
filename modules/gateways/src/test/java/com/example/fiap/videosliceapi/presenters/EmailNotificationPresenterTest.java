@@ -1,6 +1,7 @@
 package com.example.fiap.videosliceapi.presenters;//import static org.junit.jupiter.api.Assertions.*;
 
 import com.example.fiap.videosliceapi.domain.entities.Job;
+import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -52,10 +53,12 @@ class EmailNotificationPresenterTest {
         UUID id = UUID.fromString("f4881488-1091-70b1-21fe-6dc5cce9c313");
         Job completeJob = Job.createJob(id, "input-file.mp4", 10, Instant.now(), "User_ABC")
                 .completeProcessing("output-file.zip", Instant.now());
+        DownloadLink downloadLink = new DownloadLink("https://download.example.com/video1-frames.zip", 60);
 
-        String body = emailNotificationPresenter.finishedJobNotificationBody(completeJob);
+        String body = emailNotificationPresenter.finishedJobNotificationBody(completeJob, downloadLink);
         assertThat(body).contains("Your VideoSlice job id=<span style=\"font-weight: bold\">f4881488-1091-70b1-21fe-6dc5cce9c313</span> has completed successfully");
-        assertThat(body).contains("Go to the application to get the download link");
+        assertThat(body).contains("https://download.example.com/video1-frames.zip");
+        assertThat(body).contains("60 minutes");
     }
 
     @Test
@@ -64,7 +67,7 @@ class EmailNotificationPresenterTest {
         Job failedJob = Job.createJob(id, "input-file.mp4", 10, Instant.now(), "User_ABC")
                 .errorProcessing("Invalid video file", Instant.now());
 
-        String body = emailNotificationPresenter.finishedJobNotificationBody(failedJob);
+        String body = emailNotificationPresenter.finishedJobNotificationBody(failedJob, null);
         assertThat(body).contains("Your VideoSlice job id=<span style=\"font-weight: bold\">f4881488-1091-70b1-21fe-6dc5cce9c313</span> has failed");
         assertThat(body).contains("Invalid video file");
     }
@@ -74,7 +77,7 @@ class EmailNotificationPresenterTest {
         UUID id = UUID.fromString("f4881488-1091-70b1-21fe-6dc5cce9c313");
         Job newJob = Job.createJob(id, "input-file.mp4", 10, Instant.now(), "User_ABC");
 
-        assertThatThrownBy(() -> emailNotificationPresenter.finishedJobNotificationBody(newJob))
+        assertThatThrownBy(() -> emailNotificationPresenter.finishedJobNotificationBody(newJob, null))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("Notification not expected for status CREATED");
     }

@@ -16,4 +16,9 @@ public class StaticEnvironment extends AbstractEnvironment {
     public String getProperty(String key) {
         return properties.get(key);
     }
+
+    @Override
+    public String getProperty(String key, String defaultValue) {
+        return properties.getOrDefault(key, defaultValue);
+    }
 }
