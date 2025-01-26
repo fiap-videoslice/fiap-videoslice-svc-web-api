@@ -35,7 +35,7 @@ Content-Disposition: form-data; name="sliceIntervalSeconds"
 --boundary--
 
 
-###
+### Get download link for completed job
 GET {{url}}/jobs/8262c016-4ba0-462d-877f-2786786d707b/download
 Authorization: Bearer {{realAuthToken}}
 
