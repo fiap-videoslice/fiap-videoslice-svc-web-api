@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: svc-web-api-email-notification-config
+data:
+  "videosliceapi.integration.smtp.enabled": "true"
+  "videosliceapi.integration.smtp.server": "{SMTP_SERVER}"
+  "videosliceapi.integration.smtp.port": "{SMTP_PORT}"
+  "videosliceapi.integration.smtp.starttls": "{SMTP_TLS}"
+  "videosliceapi.integration.smtp.user": "{SMTP_USER}"
+  "videosliceapi.integration.smtp.password": "{SMTP_PASSWORD}"
+  "videosliceapi.integration.smtp.mailFrom": "{SMTP_MAILFROM}"

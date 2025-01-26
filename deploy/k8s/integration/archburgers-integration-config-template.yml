@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: svc-web-api-integration-config
+data:
+  "videosliceapi.integration.sqs.videoProcessRequestQueueName": "{QUEUE_REQUESTS}"
+  "videosliceapi.integration.sqs.videoProcessResponseQueueName": "{QUEUE_RESPONSE}"
+
+  "videosliceapi.integration.s3.videoProcessRequestBucketName": "{BUCKET_INPUT}"
+  "videosliceapi.integration.s3.videoProcessResultBucketName": "{BUCKET_RESULT}"

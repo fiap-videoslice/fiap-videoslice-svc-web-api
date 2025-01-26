@@ -1,14 +1,25 @@
 # ##### JOB CREATION AND QUERY APIs #################
 
+# Instructions:
+# Use the Dummy authentication line when running in local development (valid values: User1, User2, Admin)
+# Use the actual Bearer token when running on the cloud
+
+###
+### Obtain token before authenticated operations (Cloud only)
+# Paste the returned IdToken in the realAuthToken variable from private env file
+GET {{url}}/token
+Authorization: Basic {{user}} {{password}}
+
+###
 GET {{url}}/jobs
-Authorization: Dummy User1
-#Authorization: Bearer {{realAuthToken}}
+#Authorization: Dummy User1
+Authorization: Bearer {{realAuthToken}}
 
 ###
 POST {{url}}/jobs
 Content-Type: multipart/form-data; boundary=boundary
-Authorization: Dummy User1
-#Authorization: Bearer {{realAuthToken}}
+#Authorization: Dummy User1
+Authorization: Bearer {{realAuthToken}}
 
 --boundary
 Content-Disposition: form-data; name="file"; filename="sample-video.mp4"
@@ -23,6 +34,12 @@ Content-Disposition: form-data; name="sliceIntervalSeconds"
 
 --boundary--
 
+
+### Get download link for completed job
+GET {{url}}/jobs/8262c016-4ba0-462d-877f-2786786d707b/download
+Authorization: Bearer {{realAuthToken}}
+
+
 ###
 # ####### USER CREATION AND INFO APIs #########################
 GET {{url}}/users/me
@@ -30,10 +47,10 @@ Authorization: Dummy User1
 #Authorization: Bearer {{realAuthToken}}
 
 
-###
+### Create a new user
+### Requester must be in the Admin group
 POST {{url}}/users
-Authorization: Dummy Admin
-#Authorization: Bearer {{realAuthToken}}
+Authorization: Bearer {{realAuthToken}}
 Content-Type: application/json
 
 {
@@ -42,5 +59,4 @@ Content-Type: application/json
   "group": "User",
   "password": "sl1ceTh1sV1de0"
 }
-
 
