@@ -1,11 +1,11 @@
 name: verify-project-on-pull-request
 run-name: Verifying on PR - ${{github.event.pull_request.title}}
-on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+on: push  # Temporary while testing!!! - must be only on PR
+#  pull_request:
+#    types:
+#      - opened
+#      - synchronize
+#      - reopened
 
 jobs:
   mvn-verify-dev-tests-and-integration:
