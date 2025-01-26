@@ -151,7 +151,7 @@ public class VideoEngineServiceImplTest {
         assertThat(jobResponse.id()).isEqualTo(UUID.fromString("123e4567-e89b-12d3-a456-426614174000"));
         assertThat(jobResponse.status()).isEqualTo(JobStatus.PROCESSING);
 
+        verify(queueApi).deleteMessagesResponseQueue(invalidMessageSummary);
         verify(queueApi).deleteMessagesResponseQueue(validMessageSummary);
-        verify(queueApi, never()).deleteMessagesResponseQueue(invalidMessageSummary);
     }
 }

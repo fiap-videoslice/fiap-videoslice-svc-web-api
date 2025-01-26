@@ -49,9 +49,11 @@ public class VideoEngineServiceImpl implements VideoEngineService {
                 queueApi.deleteMessagesResponseQueue(message);
 
             } catch (Exception e) {
-                // Message is not removed from the queue, coming back after a few seconds
-                // TO-DO : We currently do not have a retry limit, a proper control with a thrash queue must be implemented
                 LOGGER.error("Error processing engine response: {} -- {}", e.getMessage(), message.body(), e);
+
+                // TO-DO: Improve error handling: today the operator must look at the failures manually from logs.
+                // Improve the storage of these failures, and/or implement a reprocess queue.
+                queueApi.deleteMessagesResponseQueue(message);
             }
         });
     }
