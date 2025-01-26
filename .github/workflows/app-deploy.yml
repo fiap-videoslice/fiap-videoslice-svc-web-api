@@ -1,0 +1,191 @@
+name: app-deploy
+run-name: Package and deploy application
+on: push  # Temporary - enable only on push to Main
+#  push:
+#    branches:
+#      - main
+#  workflow_dispatch: {}
+
+jobs:
+  mvn-install-with-libs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+      - name: Maven Install and Copy libraries
+        run: mvn clean install dependency:copy-dependencies
+      - name: Prepare app directory
+        run: |
+          mkdir ./docker/temp_libs
+          cp ./modules/web-app/target/svc-web-api-webapi-*.jar ./docker/temp_libs/
+          cp ./modules/web-app/target/lib/* ./docker/temp_libs/
+      - name: Archive app directory
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-libs-dir
+          path: ./docker/temp_libs/*
+          retention-days: 1
+      - id: OutputProjectVersion
+        run: echo "project_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)" >> "$GITHUB_OUTPUT"
+    outputs:
+      project_version: ${{ steps.OutputProjectVersion.outputs.project_version }}
+
+  build-docker-image:
+    needs: mvn-install-with-libs
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_VERSION: ${{ needs.mvn-install-with-libs.outputs.project_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Download built artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-libs-dir
+          path: ./docker/temp_libs/
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker
+          push: true
+          tags: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKER_IMAGE_BASE_NAME }}:latest,${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKER_IMAGE_BASE_NAME }}:${{env.PROJECT_VERSION}}
+
+  prepare-k8s-aws-dependencies:
+    needs:
+      - mvn-install-with-libs
+      - build-docker-image
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_VERSION: ${{ needs.mvn-install-with-libs.outputs.project_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Verify EKS cluster
+        run: ./deploy/utils/check-cluster-status.sh ${{vars.EKS_CLUSTER_NAME}}
+      - name: Get database URL
+        id: get-db-url
+        run: ./deploy/utils/get-database-url.sh ${{vars.DB_INSTANCE_IDENTIFIER}} >> $GITHUB_OUTPUT
+      - name: Get Cognito UserPool info
+        id: get-cognito-info
+        run: ./deploy/utils/get-user-pool-info.sh ${{vars.COGNITO_USER_POOL}} >> $GITHUB_OUTPUT
+
+      - name: Prepare kubernetes files
+        run: |
+          cat ./deploy/k8s/db/db-configs-cloud-template.yml \
+             | sed "s/{DB_URL}/${{ steps.get-db-url.outputs.DB_URL }}/" \
+             | sed "s/{DB_NAME}/${{vars.DATABASE_NAME}}/" \
+             | sed "s/{DB_USER}/${{vars.DATABASE_USER}}/" \
+             | sed "s/{DB_PASS}/${{secrets.DATABASE_PASSWORD}}/" > ./kube-db-configs.yml
+
+      - name: Prepare AWS+Cognito configmap
+        run: |
+          cat ./deploy/k8s/app/aws-configs-template.yml \
+             | sed "s/{ACCESS_KEY_ID}/$(echo -n '${{secrets.AWS_ACCESS_KEY_ID}}' | tr -d '\n')/" \
+             | sed "s|{SECRET_ACCESS_KEY}|$(echo -n '${{secrets.AWS_SECRET_ACCESS_KEY}}' | tr -d '\n')|" \
+             | sed "s|{SESSION_TOKEN}|$(echo -n '${{secrets.AWS_SESSION_TOKEN}}' | tr -d '\n')|" \
+             | sed "s/{REGION}/us-east-1/" \
+             | sed "s/{USER_POOL_ID}/${{steps.get-cognito-info.outputs.USER_POOL_ID}}/" \
+             | sed "s/{USER_POOL_CLIENT_ID}/${{steps.get-cognito-info.outputs.USER_POOL_CLIENT_ID}}/" \
+             | sed "s/{USER_POOL_CLIENT_SECRET}/${{steps.get-cognito-info.outputs.USER_POOL_CLIENT_SECRET}}/" > ./kube-aws-configs.yml
+
+      - name: Prepare Integracao configmap
+        run: |
+          cat ./deploy/k8s/integration/archburgers-integration-config-template.yml \
+             | sed "s|{QUEUE_REQUESTS}|${{vars.VIDEO_PROCESS_REQUEST_QUEUE_NAME}}|" \
+             | sed "s|{QUEUE_RESPONSE}|${{vars.VIDEO_PROCESS_RESPONSE_QUEUE_NAME}}|" \
+             | sed "s|{BUCKET_INPUT}|${{vars.VIDEO_PROCESS_REQUEST_BUCKET_NAME}}|" \
+             | sed "s|{BUCKET_RESULT}|${{vars.VIDEO_PROCESS_RESPONSE_BUCKET_NAME}}|" > ./kube-integracao-configs.yml
+
+      - name: Prepare SMTP Integration configmap
+        run: |
+          cat ./deploy/k8s/integration/email-notification-config-template.yml \
+             | sed "s|{SMTP_SERVER}|${{vars.SMTP_SERVER}}|" \
+             | sed "s|{SMTP_PORT}|${{vars.SMTP_PORT}}|" \
+             | sed "s|{SMTP_TLS}|${{vars.SMTP_TLS}}|" \
+             | sed "s|{SMTP_USER}|${{vars.SMTP_USER}}|" \
+             | sed "s|{SMTP_PASSWORD}|${{vars.SMTP_PASSWORD}}|" \
+             | sed "s|{SMTP_MAILFROM}|${{vars.SMTP_MAILFROM}}|" > ./kube-smtp-configs.yml
+
+      - name: Update image in App Deployment
+        run: |
+          cat ./deploy/k8s/app/app-deployment.yml \
+            | sed "s|image: .*${{ vars.DOCKER_IMAGE_BASE_NAME }}.*$|image: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKER_IMAGE_BASE_NAME }}:${{env.PROJECT_VERSION}}|" > ./kube-app-deployment-updated.yml
+
+      - name: Upload kube artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kube-artifacts
+          path: "kube-*.yml"
+          retention-days: 1
+
+  deploy-k8s:
+    needs:
+      - prepare-k8s-aws-dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: "Configure AWS Credentials"
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: us-east-1
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+
+      - name: Download configmaps
+        uses: actions/download-artifact@v4
+        with:
+          name: kube-artifacts
+          path: ./
+
+      - name: Configure kubectl
+        run: aws eks update-kubeconfig --name ${{vars.EKS_CLUSTER_NAME}}
+
+      - name: Create database info ConfigMap
+        run: kubectl apply -f kube-db-configs.yml
+
+      - name: Create AWS-Services ConfigMap
+        run: kubectl apply -f kube-aws-configs.yml
+
+      - name: Create Microservices Integration ConfigMap
+        run: kubectl apply -f kube-integracao-configs.yml
+
+      - name: Create Microservices SMTP ConfigMap
+        run: kubectl apply -f kube-smtp-configs.yml
+
+      - name: Create App Internal service
+        run: kubectl apply -f deploy/k8s/app/app-service-internal.yml
+
+      - name: Create App LoadBalancer service
+        run: kubectl apply -f deploy/k8s/app/app-service-loadbalancer.yml
+
+      - name: Create App Deployment
+        run: kubectl apply -f kube-app-deployment-updated.yml
+
+      - name: Enable Metrics Server
+        run: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+      - name: Create App HPA
+        run: kubectl apply -f deploy/k8s/app/app-hpa.yml

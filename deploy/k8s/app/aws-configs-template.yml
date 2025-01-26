@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: svc-web-api-aws-config
+data:
+  "videosliceapi.integration.aws.AWS_ACCESS_KEY_ID": "{ACCESS_KEY_ID}"
+  "videosliceapi.integration.aws.AWS_SECRET_ACCESS_KEY": "{SECRET_ACCESS_KEY}"
+  "videosliceapi.integration.aws.AWS_SESSION_TOKEN": "{SESSION_TOKEN}"
+
+  "videosliceapi.integration.aws.region": "{REGION}"
+  "videosliceapi.integration.cognito.userPoolId": "{USER_POOL_ID}"
+  "videosliceapi.integration.cognito.clientId": "{USER_POOL_CLIENT_ID}"
+  "videosliceapi.integration.cognito.clientSecret": "{USER_POOL_CLIENT_SECRET}"
+

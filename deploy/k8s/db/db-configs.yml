@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: svc-web-api-db-access-config
+data:
+  "videosliceapi.datasource.db_name": "archburgers"
+  "videosliceapi.datasource.dbUrl": "jdbc:postgresql://archburgers-db-svc/archburgers?autoReconnect=true"
+  "videosliceapi.datasource.dbUser": "pguser"
+  "videosliceapi.datasource.dbPass": "216hdjkasda%jhjKaA"
+

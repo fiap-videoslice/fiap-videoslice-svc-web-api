@@ -1,0 +1,161 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: videoslice-svc-web-api-deployment
+spec:
+  selector:
+    matchLabels:
+      app: videoslice-svc-web-api
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: videoslice-svc-web-api
+    spec:
+      containers:
+        - name: videoslice-svc-web-api-container
+          image: gomesrodris/fiap-videoslice-svc-web-api:0.0.5
+          ports:
+            - containerPort: 8090
+          env:
+            - name: "videosliceapi.datasource.dbUrl"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-db-access-config"
+                  key: "videosliceapi.datasource.dbUrl"
+            - name: "videosliceapi.datasource.dbUser"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-db-access-config"
+                  key: "videosliceapi.datasource.dbUser"
+            - name: "videosliceapi.datasource.dbPass"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-db-access-config"
+                  key: "videosliceapi.datasource.dbPass"
+
+            # Integration with external AWS resources
+            - name: "videosliceapi.integration.aws.region"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-aws-config"
+                  key: "videosliceapi.integration.aws.region"
+            - name: "videosliceapi.integration.cognito.userPoolId"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-aws-config"
+                  key: "videosliceapi.integration.cognito.userPoolId"
+            - name: "videosliceapi.integration.cognito.clientId"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-aws-config"
+                  key: "videosliceapi.integration.cognito.clientId"
+            - name: "videosliceapi.integration.cognito.clientSecret"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-aws-config"
+                  key: "videosliceapi.integration.cognito.clientSecret"
+
+            ## Integration with other microservices
+
+            - name: "videosliceapi.integration.sqs.videoProcessRequestQueueName"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-integration-config"
+                  key: "videosliceapi.integration.sqs.videoProcessRequestQueueName"
+
+            - name: "videosliceapi.integration.sqs.videoProcessResponseQueueName"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-integration-config"
+                  key: "videosliceapi.integration.sqs.videoProcessResponseQueueName"
+
+            - name: "videosliceapi.integration.s3.videoProcessRequestBucketName"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-integration-config"
+                  key: "videosliceapi.integration.s3.videoProcessRequestBucketName"
+
+            - name: "videosliceapi.integration.s3.videoProcessResultBucketName"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-integration-config"
+                  key: "videosliceapi.integration.s3.videoProcessResultBucketName"
+
+            # Needs to be passed via env var - Pod cannot assume role in AwsAcademy
+            - name: "AWS_ACCESS_KEY_ID"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-aws-config"
+                  key: "videosliceapi.integration.aws.AWS_ACCESS_KEY_ID"
+            - name: "AWS_SECRET_ACCESS_KEY"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-aws-config"
+                  key: "videosliceapi.integration.aws.AWS_SECRET_ACCESS_KEY"
+            - name: "AWS_SESSION_TOKEN"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-aws-config"
+                  key: "videosliceapi.integration.aws.AWS_SESSION_TOKEN"
+
+            ### Smtp config
+            - name: "videosliceapi.integration.smtp.enabled"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-email-notification-config"
+                  key: "videosliceapi.integration.smtp.enabled"
+            - name: "videosliceapi.integration.smtp.server"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-email-notification-config"
+                  key: "videosliceapi.integration.smtp.server"
+            - name: "videosliceapi.integration.smtp.port"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-email-notification-config"
+                  key: "videosliceapi.integration.smtp.port"
+            - name: "videosliceapi.integration.smtp.starttls"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-email-notification-config"
+                  key: "videosliceapi.integration.smtp.starttls"
+            - name: "videosliceapi.integration.smtp.user"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-email-notification-config"
+                  key: "videosliceapi.integration.smtp.user"
+            - name: "videosliceapi.integration.smtp.password"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-email-notification-config"
+                  key: "videosliceapi.integration.smtp.password"
+            - name: "videosliceapi.integration.smtp.mailFrom"
+              valueFrom:
+                configMapKeyRef:
+                  name: "svc-web-api-email-notification-config"
+                  key: "videosliceapi.integration.smtp.mailFrom"
+
+          readinessProbe:
+            httpGet:
+              port: 8090
+              path: /healthcheck
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 1
+          livenessProbe:
+            httpGet:
+              port: 8090
+              path: /healthcheck
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            # https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+            # A common pattern for liveness probes is to use the same low-cost HTTP endpoint as for readiness probes,
+            # but with a higher failureThreshold
+            failureThreshold: 5
+          resources:
+            requests:
+              cpu: 250m
+
