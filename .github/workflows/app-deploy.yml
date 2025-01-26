@@ -1,10 +1,10 @@
 name: app-deploy
 run-name: Package and deploy application
-on: push  # Temporary - enable only on push to Main
-#  push:
-#    branches:
-#      - main
-#  workflow_dispatch: {}
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
 
 jobs:
   mvn-install-with-libs:
