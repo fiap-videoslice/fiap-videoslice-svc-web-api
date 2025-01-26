@@ -95,7 +95,7 @@ jobs:
           cat ./deploy/k8s/db/db-configs-cloud-template.yml \
              | sed "s/{DB_URL}/${{ steps.get-db-url.outputs.DB_URL }}/" \
              | sed "s/{DB_NAME}/${{vars.DATABASE_NAME}}/" \
-             | sed "s/{DB_USER}/${{vars.DATABASE_USER}}/" \
+             | sed "s/{DB_USER}/${{secrets.DATABASE_USER}}/" \
              | sed "s/{DB_PASS}/${{secrets.DATABASE_PASSWORD}}/" > ./kube-db-configs.yml
 
       - name: Prepare AWS+Cognito configmap
