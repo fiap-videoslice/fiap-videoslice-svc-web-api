@@ -10,7 +10,7 @@ Create postgres database
       create user videoslice_user password 'Slice!';
       create database fiap_videoslice owner videoslice_user;
 
-> Postgres may also be run with Docker. Use the appropriate env parameters to set the user, password and db name.
+> Postgres may also be run with Docker. Use the appropriate env parameters to set the user, password and db name. 
 
 Start LocalStack
 
