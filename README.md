@@ -43,6 +43,19 @@ following HTTP Authorization headers:
 
 They are mapped to mocked users that are valid through the application.
 
+#### Run locally with Docker
+
+To build the image locally:
+
+    cd docker/
+    ./build-locally
+
+To run the full solution with Docker Compose:
+
+    cd test-resources/compose
+    docker-compose up
+
 #### API Calls
 
 See examples in the file test-resources/job-api.http
+
