@@ -123,8 +123,8 @@ jobs:
              | sed "s|{SMTP_SERVER}|${{vars.SMTP_SERVER}}|" \
              | sed "s|{SMTP_PORT}|${{vars.SMTP_PORT}}|" \
              | sed "s|{SMTP_TLS}|${{vars.SMTP_TLS}}|" \
-             | sed "s|{SMTP_USER}|${{vars.SMTP_USER}}|" \
-             | sed "s|{SMTP_PASSWORD}|${{vars.SMTP_PASSWORD}}|" \
+             | sed "s|{SMTP_USER}|${{secrets.SMTP_USER}}|" \
+             | sed "s|{SMTP_PASSWORD}|${{secrets.SMTP_PASSWORD}}|" \
              | sed "s|{SMTP_MAILFROM}|${{vars.SMTP_MAILFROM}}|" > ./kube-smtp-configs.yml
 
       - name: Update image in App Deployment
