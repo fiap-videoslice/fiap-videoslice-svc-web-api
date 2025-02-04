@@ -42,7 +42,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
-      - name: Maven Verify
+      - name: Verify Dependencies for CVEs
         run: mvn -DskipTests -DskipDependencyCheck=false -DnvdApiKey=${{secrets.NVD_API_KEY}} verify
 
       - name: Upload vulnerabilities report
