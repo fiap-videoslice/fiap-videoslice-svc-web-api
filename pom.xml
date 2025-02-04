@@ -12,8 +12,8 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
 
-        <deps.spring.version>6.1.5</deps.spring.version>
-        <deps.spring.boot.version>3.2.4</deps.spring.boot.version>
+        <deps.spring.version>6.2.2</deps.spring.version>
+        <deps.spring.boot.version>3.4.2</deps.spring.boot.version>
 
         <!-- Will only run when explicitly enabled -->
         <skipDependencyCheck>true</skipDependencyCheck>

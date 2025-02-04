@@ -31,7 +31,7 @@ services:
       - ./init-localstack.sh:/etc/localstack/init/ready.d/init-localstack.sh
 
   svc-engine:
-    image: dockerhubalancarvalho/fiap-videoslice-svc-engine:0.0.12
+    image: dockerhubalancarvalho/fiap-videoslice-svc-engine:0.0.20
     container_name: svc-engine
     restart: "no"
     environment:
@@ -53,7 +53,7 @@ services:
         condition: service_started
 
   svc-web-api:
-    image: gomesrodris/fiap-videoslice-svc-web-api:0.0.6
+    image: gomesrodris/fiap-videoslice-svc-web-api:0.0.7
     container_name: svc-web-api
     restart: "no"
     environment:
