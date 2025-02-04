@@ -50,7 +50,7 @@ public class UserApiHandler {
         }
     }
 
-    @Operation(summary = "Add a new user")
+    @Operation(summary = "Add a new user", description = "Create a new user (directly on the external user manager service). Requester must be in the Admin group")
     @PostMapping(path = "/users", produces = "application/json")
     public ResponseEntity<CreateUserResponse> createUser(@RequestBody CreateUserRequest request,
                                                          @RequestHeader HttpHeaders headers) {

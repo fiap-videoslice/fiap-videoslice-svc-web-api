@@ -1,14 +1,13 @@
 package com.example.fiap.videosliceapi.adapters.controllers;
 
+import com.example.fiap.videosliceapi.adapters.auth.LoggedUser;
 import com.example.fiap.videosliceapi.adapters.auth.LoggedUserTokenParser;
 import com.example.fiap.videosliceapi.adapters.datasource.TransactionManager;
-import com.example.fiap.videosliceapi.adapters.dto.JobDto;
 import com.example.fiap.videosliceapi.adapters.dto.JobCreationResponseDto;
+import com.example.fiap.videosliceapi.adapters.dto.JobDto;
 import com.example.fiap.videosliceapi.apiutils.LoggedUserCheck;
 import com.example.fiap.videosliceapi.apiutils.WebUtils;
-import com.example.fiap.videosliceapi.adapters.auth.LoggedUser;
 import com.example.fiap.videosliceapi.domain.entities.Job;
-import com.example.fiap.videosliceapi.domain.exception.DomainArgumentException;
 import com.example.fiap.videosliceapi.domain.exception.DomainPermissionException;
 import com.example.fiap.videosliceapi.domain.usecasedto.CreateJobParam;
 import com.example.fiap.videosliceapi.domain.usecasedto.DownloadLink;
