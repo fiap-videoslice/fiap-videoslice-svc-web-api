@@ -1,5 +1,7 @@
-fiap-videoslice-svc-videohandler
+fiap-videoslice-svc-web-api
 ================================
+
+Manages the processing requests and communicates with the Engine service.
 
 
 # Setup of local dev environment
